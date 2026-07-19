@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>RedSnake</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="homescreen">
+        <h1>RedSnake</h1>
+        <button id="playbtn">Play</button>
+    </div>
+    <div id="gamecontainer">
+        <div id="score">Score: <span id="scoree">0</span></div>
+        <canvas id="gamescreen"></canvas>
+        <div id="restart">Restart</div>
+        <div id="gameoverpopup" class="hidden">
+        <div class="popup-box">
+            <p>Score: <span id="finalscore">0</span></p>
+            <button id="restartbtn">Restart</button>
+            <button id="homebtn">Home</button>
+        </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
