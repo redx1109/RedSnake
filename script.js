@@ -1,7 +1,7 @@
 const gameboard = document.querySelector('#gamescreen');
 const ctx = gameboard.getContext('2d');
 const scoretext = document.querySelector('#scoree');
-const restart = document.querySelector('#restart');
+
 gameboard.width = gameboard.clientWidth;
 gameboard.height = gameboard.clientHeight;
 function wscreen(){ return gameboard.width; }
@@ -12,6 +12,8 @@ const screenbackground = '#16181c';
 const foodcolor = '#c9944f';
 const size = Math.max(15, Math.round(Math.min(gameboard.clientWidth, gameboard.clientHeight) / 20 / 10) * 10);
 let ate = false;
+let highscore = Number(localStorage.getItem('rs_high')) || 0;
+let nextX = size, nextY = 0;
 let running = true;
 let x=size;
 let y=0;
@@ -36,15 +38,15 @@ gameboard.addEventListener('touchend', e => {
     const dy = e.changedTouches[0].clientY - ty;
     if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) return;
     if (Math.abs(dx) > Math.abs(dy)){
-        if (dx > 0 && x != -size){ x=size; y=0; }
-        else if (dx < 0 && x != size){ x=-size; y=0; }
+        if (dx > 0 &&  nextX!= -size){ nextX=size; nextY=0; }
+        else if (dx < 0 && nextX != size){ nextX=-size; nextY=0; }
     } else {
-        if (dy > 0 && y != -size){ x=0; y=size; }
-        else if (dy < 0 && y != size){ x=0; y=-size; }
+        if (dy > 0 && nextY != -size){ nextX=0; nextY=size; }
+        else if (dy < 0 && nextY!= size){ nextX=0; nextY=-size; }
     }
 });
 window.addEventListener("keydown", changedirection);
-restart.addEventListener('click', restartgame)
+
 document.querySelector('#homebtn').addEventListener('click', () => {
     document.querySelector('#gameoverpopup').classList.add('hidden');
     document.querySelector('#gamecontainer').classList.add('hidden');
@@ -94,20 +96,16 @@ function changedirection(event){
 
     switch(true){
         case(keypressed == left && !goright):
-            x = -size;
-            y = 0;
+            nextX = -size; nextY = 0;
             break;
         case(keypressed == up && !godown):
-            x = 0;
-            y = -size;
+            nextX = 0; nextY = -size;
             break;
         case(keypressed == right && !goleft):
-            x = size;
-            y = 0;
+            nextX = size; nextY = 0;
             break;
         case(keypressed == down && !goup):
-            x = 0;
-            y = size;
+            nextX = 0; nextY = size;
             break;
     };
 };
@@ -123,7 +121,7 @@ function dsnake(){
         const s = size * scale;
         const cx = snakePart.x + size/2 - s/2;
         const cy = snakePart.y + size/2 - s/2;
-        const shade = 175 - i * 3;
+        const shade = Math.max(175 - i * 3, 40);
         ctx.fillStyle = `rgb(${shade-30}, ${shade}, ${shade-50})`;
         ctx.beginPath();
         ctx.roundRect(cx, cy, s, s, 4);
@@ -152,12 +150,17 @@ function time(){
     }
 };
 function movesnake(){
+    x = nextX; y = nextY;
     const head = {x: snake[0].x + x,
                   y: snake[0].y + y};
     snake.unshift(head);
     if (snake[0].x == fx && snake[0].y == fy){
         score+=1;
         scoretext.textContent = score;
+        if (score > highscore){
+            highscore = score;
+            localStorage.setItem('rs_high', highscore);
+        }
         spawnfood();
         ate = true;
         eatPulse = 0;
@@ -210,17 +213,19 @@ function gameover(){
 function dgameover(){
     gameboard.classList.add('shake');
     setTimeout(()=>{
-        document.querySelector('#finalscore').textContent = score;
+        document.querySelector('#finalscore').textContent = `${score} (Best: ${highscore})`;
         document.querySelector('#gameoverpopup').classList.remove('hidden');
         gameboard.classList.remove('shake');
     }, 300);
-    running = false;    
+    running = false;
 };
 
 function restartgame(){
     score = 0;
     x = size;
     y = 0;
+    nextX = size;
+    nextY = 0;
     snake = [
     {x:size*4, y:0},
     {x:size*3, y:0},
