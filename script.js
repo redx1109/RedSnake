@@ -9,7 +9,7 @@ function hscreen(){ return gameboard.height; }
 const snakecolor = '#8fae7c';
 const snakebordercolor = '#16181c';
 const screenbackground = '#16181c';
-const foodcolor = '#c9944f';
+const foodcolor = '#FA3604';
 const size = Math.max(15, Math.round(Math.min(gameboard.clientWidth, gameboard.clientHeight) / 20 / 10) * 10);
 let ate = false;
 let highscore = Number(localStorage.getItem('rs_high')) || 0;
@@ -121,16 +121,70 @@ function dsnake(){
         const s = size * scale;
         const cx = snakePart.x + size/2 - s/2;
         const cy = snakePart.y + size/2 - s/2;
-        const shade = Math.max(175 - i * 3, 40);
-        ctx.fillStyle = `rgb(${shade-30}, ${shade}, ${shade-50})`;
+        const start = { r: 190, g: 220, b: 9 };   // #BEDC09
+        const end   = { r: 154, g: 198, b: 6 };   // #9AC606
+
+        const t = Math.min(i / (snake.length - 1), 1);
+
+        const r = Math.round(start.r + (end.r - start.r) * t);
+        const g = Math.round(start.g + (end.g - start.g) * t);
+        const b = Math.round(start.b + (end.b - start.b) * t);
+
+        ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
         ctx.beginPath();
-        ctx.roundRect(cx, cy, s, s, 4);
+        ctx.roundRect(cx, cy, s, s, 6);
+        
         ctx.fill();
+        ctx.strokeStyle = "#16181c";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        if (i === 0 && Math.floor(Date.now()/300) % 2 === 0) {
+            const dx = x/size, dy = y/size;
+            const tipx = cx + s/2 + dx*s*0.75;
+            const tipy = cy + s/2 + dy*s*0.75;
+            const px = -dy, py = dx;
+            ctx.strokeStyle = "#FA3604";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(cx+s/2+dx*s*0.5, cy+s/2+dy*s*0.5);
+            ctx.lineTo(tipx, tipy);
+            ctx.moveTo(tipx, tipy);
+            ctx.lineTo(tipx+dx*s*0.15+px*s*0.12, tipy+dy*s*0.15+py*s*0.12);
+            ctx.moveTo(tipx, tipy);
+            ctx.lineTo(tipx+dx*s*0.15-px*s*0.12, tipy+dy*s*0.15-py*s*0.12);
+            ctx.stroke();
+        }
+        if (i === 0) {
+            const dx = x/size, dy = y/size;
+            const px = -dy, py = dx;
+            const ex = cx + s/2 + dx*s*0.2;
+            const ey = cy + s/2 + dy*s*0.2;
+            const off = s*0.22;
+            ctx.fillStyle = "#111";
+            ctx.beginPath();
+            ctx.arc(ex + px*off, ey + py*off, 2.5, 0, Math.PI*2);
+            ctx.arc(ex - px*off, ey - py*off, 2.5, 0, Math.PI*2);
+            ctx.fill();
+            const distToFood = Math.hypot((cx+s/2)-(fx+size/2), (cy+s/2)-(fy+size/2));
+            if (distToFood < size * 1.5) {
+                const dx = x/size, dy = y/size;
+                const px = -dy, py = dx;
+                const mx = cx + s/2 + dx*s*0.45;
+                const my = cy + s/2 + dy*s*0.45;
+                ctx.fillStyle = "#111";
+                ctx.beginPath();
+                ctx.moveTo(mx + px*s*0.18, my + py*s*0.18);
+                ctx.lineTo(mx + dx*s*0.25, my + dy*s*0.25);
+                ctx.lineTo(mx - px*s*0.18, my - py*s*0.18);
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
     })
     if(!ate){ snake.pop(); }
     ate = false;
     if (eatPulse >= 0){
-        eatPulse++;
+        eatPulse+=2;
         if (eatPulse > snake.length + 2) eatPulse = -1;
     }
 };
@@ -168,9 +222,21 @@ function movesnake(){
 };
 
 function food(){
-    ctx.fillStyle = foodcolor;
+    const grad = ctx.createRadialGradient(
+        fx + size * 0.35,
+        fy + size * 0.35,
+        2,
+        fx + size / 2,
+        fy + size / 2,
+        size / 2
+    );
+
+    grad.addColorStop(0, "#FF7A1A");
+    grad.addColorStop(1, "#FA3604");
+
+    ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.arc(fx + size/2, fy + size/2, size/2, 0, Math.PI*2);
+    ctx.arc(fx + size/2, fy + size/2, size/2, 0, Math.PI * 2);
     ctx.fill();
 };
 
