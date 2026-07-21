@@ -32,10 +32,12 @@ let eatPulse = -1;
 gameboard.addEventListener('touchstart', e => {
     tx = e.touches[0].clientX;
     ty = e.touches[0].clientY;
-});
-gameboard.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - tx;
-    const dy = e.changedTouches[0].clientY - ty;
+}, {passive:true});
+
+gameboard.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const dx = e.touches[0].clientX - tx;
+    const dy = e.touches[0].clientY - ty;
     if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) return;
     if (Math.abs(dx) > Math.abs(dy)){
         if (dx > 0 &&  nextX!= -size){ nextX=size; nextY=0; }
@@ -44,7 +46,9 @@ gameboard.addEventListener('touchend', e => {
         if (dy > 0 && nextY != -size){ nextX=0; nextY=size; }
         else if (dy < 0 && nextY!= size){ nextX=0; nextY=-size; }
     }
-});
+    tx = e.touches[0].clientX;
+    ty = e.touches[0].clientY;
+}, {passive:false});
 window.addEventListener("keydown", changedirection);
 
 document.querySelector('#homebtn').addEventListener('click', () => {
