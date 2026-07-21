@@ -60,7 +60,8 @@ document.querySelector('#gamecontainer').classList.add('hidden');
 document.querySelector('#playbtn').addEventListener('click', () => {
     document.querySelector('#homescreen').classList.add('hidden');
     document.querySelector('#gamecontainer').classList.remove('hidden');
-    gamestart();
+    resizeCanvas();   
+    restart();
 });
 
 window.addEventListener('resize', resizeCanvas);
