@@ -197,7 +197,7 @@ function time(){
             dsnake();
             gameover(); 
             time();
-        },75)
+        },100)
     }
     else{
         dgameover();
