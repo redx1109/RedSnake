@@ -20,6 +20,7 @@ let y=0;
 let fx;
 let fy;
 let score = 0;
+let speed = 125;
 let snake = [
     {x:size*4, y:0},
     {x:size*3, y:0},
@@ -202,12 +203,13 @@ function time(){
             dsnake();
             gameover(); 
             time();
-        },100)
+        },speed)
     }
     else{
         dgameover();
     }
 };
+
 function movesnake(){
     x = nextX; y = nextY;
     const head = {x: snake[0].x + x,
@@ -215,6 +217,9 @@ function movesnake(){
     snake.unshift(head);
     if (snake[0].x == fx && snake[0].y == fy){
         score+=1;
+        if (speed<75) {
+            speed--;
+        }
         scoretext.textContent = score;
         if (score > highscore){
             highscore = score;
