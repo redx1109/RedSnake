@@ -90,11 +90,15 @@ function clearscreen(){
 
 function changedirection(event){
     const keypressed = event.keyCode;
+    console.log(keypressed)
     const left = 37;
     const up = 38;
     const right = 39;
     const down = 40;
-
+    const a = 65;
+    const w = 87;
+    const d = 68;
+    const s = 83;
     const goleft = (x == -size);
     const goup = (y == -size);
     const goright = (x == size);
@@ -111,6 +115,18 @@ function changedirection(event){
             nextX = size; nextY = 0;
             break;
         case(keypressed == down && !goup):
+            nextX = 0; nextY = size;                    
+            break;
+        case(keypressed == a && !goright):
+            nextX = -size; nextY = 0;
+            break;
+        case(keypressed == w && !godown):
+            nextX = 0; nextY = -size;
+            break;
+        case(keypressed == d && !goleft):
+            nextX = size; nextY = 0;
+            break;
+        case(keypressed == s && !goup):
             nextX = 0; nextY = size;
             break;
     };
@@ -217,7 +233,7 @@ function movesnake(){
     snake.unshift(head);
     if (snake[0].x == fx && snake[0].y == fy){
         score+=1;
-        if (speed<75) {
+        if (speed > 75) {
             speed--;
         }
         scoretext.textContent = score;
