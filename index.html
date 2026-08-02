@@ -15,11 +15,77 @@
     <div id="homescreen">
         <h1>RedSnake</h1>
         <button id="playbtn">Play</button>
+        <button id="settingsbtn">Settings</button>
+    </div>
+    <div id="gameselect" class="hidden">
+        <span id="backfromgameselectbtn">← Back</span>
+        <div class="gamecard" id="classiccard">
+            <img src="classic-preview.png" alt="Snake Classic">
+            <h3>Snake Classic</h3>
+            <p>The timeless grid snake game</p>
+        </div>
+        <div class="gamecard" id="snake2card">
+            <img src="snake2-preview.png" alt="Snake 2.0">
+            <h3>Snake 2.0</h3>
+            <p>Open map, slither-style survival</p>
+        </div>
+    </div>
+    <div id="modeselect" class="hidden">
+        <span id="backfromodebtn">← Back</span>
+    <div id="modeCarousel">
+        <div id="modeTabs">
+            <span class="modeTab" data-mode="rounds">3 Rounds</span>
+            <span class="modeTab" data-mode="survival">Survival</span>
+            <span class="modeTab" data-mode="timetrouble">Time Trouble</span>
+            <span class="modeTab" data-mode="score">First to 10</span>
+        </div>
+        <div id="modeCardWrap">
+            <span id="modeArrowLeft">‹</span>
+            <div id="modeCard">
+                <h3 id="modeCardTitle">3 Rounds</h3>
+                <p id="modeCardDesc">Best of 3 — first to die loses each round.</p>
+            </div>
+            <span id="modeArrowRight">›</span>
+        </div>
+    </div>
+        <button id="offlinebtn">Solo Play</button>
+        <button id="onlinebtn">Random Matchmaking</button>
+        <button id="challengebtn">Challenge Friend</button>
+    </div>
+    <div id="challengeChoiceModal" class="modal hidden">
+        <div class="popup-box">
+            <p>Challenge a Friend</p>
+            <button id="createChallengeBtn">Create Code</button>
+            <button id="joinChallengeBtn">Join with Code</button>
+        </div>
+    </div>
+    <div id="joinModal" class="modal hidden">
+        <div class="popup-box">
+            <p>Enter friend's code</p>
+            <input type="text" id="joinCodeInput" maxlength="6" placeholder="CODE">
+            <button id="confirmJoinBtn">Join</button>
+        </div>
+    </div>
+    <div id="nameModal" class="modal hidden">
+        <div class="popup-box">
+            <p>Enter username</p>
+            <input type="text" id="usernameInput" maxlength="12" placeholder="Your name">
+            <button id="confirmNameBtn">Continue</button>
+        </div>
+    </div>
+    <div id="waitingscreen" class="hidden">
+        <p>Finding opponent</p>
+        <p id="waitingtimer">10</p>
     </div>
     <div id="gamecontainer">
+        <div id="comboIndicator" class="hidden">Combo: <span id="comboCount">0</span>/5 (<span id="comboTimeLeft">5</span>s)</div>
         <div id="score">Score: <span id="scoree">0</span></div>
-        <canvas id="gamescreen"></canvas>
-        
+        <div id="scorePopup" class="hidden">+5</div>
+        <div id="roundScore" class="hidden">Round <span id="roundNum">1</span> — <span id="myWins">0</span> : <span id="oppWins">0</span></div>
+        <div id="splitwrap">
+            <canvas id="gamescreen"></canvas>
+            <canvas id="oppscreen" class="hidden"></canvas>
+        </div>
         <div id="gameoverpopup" class="hidden">
             <div class="popup-box">
                 <p>Score: <span id="finalscore">0</span></p>
@@ -28,8 +94,24 @@
             </div>
         </div>
     </div>
-    
+    <div id="settingsscreen" class="hidden">
+        <h3>Settings</h3>
+        <input type="text" id="settingsUsername" maxlength="12" placeholder="Username">
+        <div id="colorOptions">
+            <span class="colorSwatch" data-color="#9AC606" style="background:#9AC606"></span>
+            <span class="colorSwatch" data-color="#06C6C6" style="background:#06C6C6"></span>
+            <span class="colorSwatch" data-color="#C60676" style="background:#C60676"></span>
+            <span class="colorSwatch" data-color="#C6A006" style="background:#C6A006"></span>
+        </div>
+        <label><input type="checkbox" id="soundToggle"> Sound</label>
+        <button id="saveSettingsBtn">Save</button>
+        <button id="backHomeBtn">Back</button>
+    </div>
     <script src="script.js"></script>
+    <script src="settings.js"></script>
+    <script src="networking.js"></script>
+    <script src="navigation.js"></script>
+    <script src="game.js"></script>
     <script>
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js');
