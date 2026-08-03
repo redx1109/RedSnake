@@ -32,25 +32,41 @@
     </div>
     <div id="modeselect" class="hidden">
         <span id="backfromodebtn">← Back</span>
-    <div id="modeCarousel">
-        <div id="modeTabs">
-            <span class="modeTab" data-mode="rounds">3 Rounds</span>
-            <span class="modeTab" data-mode="survival">Survival</span>
-            <span class="modeTab" data-mode="timetrouble">Time Trouble</span>
-            <span class="modeTab" data-mode="score">First to 10</span>
-        </div>
-        <div id="modeCardWrap">
-            <span id="modeArrowLeft">‹</span>
-            <div id="modeCard">
-                <h3 id="modeCardTitle">3 Rounds</h3>
-                <p id="modeCardDesc">Best of 3 — first to die loses each round.</p>
+        <div id="modeCarousel">
+            <div id="modeTabs">
+                <span class="modeTab" data-mode="rounds">3 Rounds</span>
+                <span class="modeTab" data-mode="survival">Survival</span>
+                <span class="modeTab" data-mode="timetrouble">Time Trouble</span>
+                <span class="modeTab" data-mode="score">First to 10</span>
             </div>
-            <span id="modeArrowRight">›</span>
+            <div id="modeCardWrap">
+                <span id="modeArrowLeft">‹</span>
+                <div id="modeCard">
+                    <h3 id="modeCardTitle">3 Rounds</h3>
+                    <p id="modeCardDesc">Best of 3 — first to die loses each round.</p>
+                </div>
+                <span id="modeArrowRight">›</span>
+            </div>
         </div>
+            <button id="offlinebtn">Solo Play</button>
+            <button id="onlinebtn">Random Matchmaking</button>
+            <button id="challengebtn">Challenge Friend</button>
     </div>
-        <button id="offlinebtn">Solo Play</button>
-        <button id="onlinebtn">Random Matchmaking</button>
-        <button id="challengebtn">Challenge Friend</button>
+    <div id="s2modeselect" class="hidden">
+        <span id="backfroms2modebtn">← Back</span>
+        <div id="s2ModeCarousel">
+            <div id="s2ModeTabs">
+                <span class="s2ModeTab active" data-mode="endless">Endless</span>
+                <span class="s2ModeTab" data-mode="battleroyale">Battle Royale</span>
+                <span class="s2ModeTab" data-mode="hunt">Hunt Mode</span>
+                <span class="s2ModeTab" data-mode="timeattack">Time Attack</span>
+            </div>
+            <div id="s2ModeCard">
+                <h3 id="s2ModeCardTitle">Endless</h3>
+                <p id="s2ModeCardDesc">Survive and grow, no timer, no limits.</p>
+            </div>
+        </div>
+        <button id="s2startbtn">Play</button>
     </div>
     <div id="challengeChoiceModal" class="modal hidden">
         <div class="popup-box">
@@ -115,6 +131,7 @@
             <div id="s2ScoreDisplay">Length: <span id="s2ScoreNum">40</span></div>
             <div id="s2AliveDisplay">Alive: <span id="s2AliveNum">100</span></div>
             <div id="s2KillDisplay">Kills: <span id="s2KillNum">0</span></div>
+            <div id="s2TimerDisplay" class="hidden">Time: <span id="s2TimeNum">180</span>s</div>
         </div>
         <div id="s2ClickHint">Click to start steering</div>
         <div id="s2Joystick">
@@ -131,11 +148,16 @@
         </div>
     </div>
     <script src="script.js"></script>
-    <script src="snake2.js"></script>
     <script src="settings.js"></script>
     <script src="networking.js"></script>
     <script src="navigation.js"></script>
     <script src="game.js"></script>
+    <script src="snake2.0/state.js"></script>
+    <script src="snake2.0/food.js"></script>
+    <script src="snake2.0/bots.js"></script>
+    <script src="snake2.0/input.js"></script>
+    <script src="snake2.0/render.js"></script>
+    <script src="snake2.0/core.js"></script>
     <script>
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js');
