@@ -92,7 +92,7 @@ function s2Loop() {
     if (s2CheckHeadCollision(newHead.x, newHead.y, thicknessNow, 'player')) {
         s2Running = false;
         document.exitPointerLock();
-        s2DropFoodTrail(s2Snake);
+        s2DropFoodTrail(s2Snake, snakeHeadColor || '#9AC606');
         document.querySelector('#s2FinalLength').textContent = s2Snake.length;
         document.querySelector('#s2FinalKills').textContent = s2PlayerKills;
         document.querySelector('#s2GameoverPopup').classList.remove('hidden');
@@ -123,6 +123,22 @@ function s2Loop() {
     }
     s2CameraX = s2Snake[0].x - s2canvas.width/2;
     s2CameraY = s2Snake[0].y - s2canvas.height/2;
+
+    const magnetR = 50, magnetPull = 0.15;
+    s2Foods.forEach(f => {
+        const d = Math.hypot(s2Snake[0].x - f.x, s2Snake[0].y - f.y);
+        if (d < magnetR) {
+            f.ox += (s2Snake[0].x - f.x) * magnetPull;
+            f.oy += (s2Snake[0].y - f.y) * magnetPull;
+        }
+    });
+    s2BigFoods.forEach(f => {
+        const d = Math.hypot(s2Snake[0].x - f.x, s2Snake[0].y - f.y);
+        if (d < magnetR) {
+            f.ox += (s2Snake[0].x - f.x) * magnetPull;
+            f.oy += (s2Snake[0].y - f.y) * magnetPull;
+        }
+    });
     // check food collision
     const headR = 12; // half of thickness (24/2)
     for (let i = s2Foods.length - 1; i >= 0; i--) {
@@ -153,6 +169,17 @@ function s2Loop() {
     document.querySelector('#s2ScoreNum').textContent = s2Snake.length;
     document.querySelector('#s2AliveNum').textContent = aliveBotCount + 1; // +1 for player
     document.querySelector('#s2KillNum').textContent = s2PlayerKills;
+    const orbitR = 8, orbitSpeed = 0.05;
+    s2Foods.forEach(f => {
+        f.orbitA += orbitSpeed;
+        f.x = f.ox + Math.cos(f.orbitA) * orbitR;
+        f.y = f.oy + Math.sin(f.orbitA) * orbitR;
+    });
+    s2BigFoods.forEach(f => {
+        f.orbitA += orbitSpeed;
+        f.x = f.ox + Math.cos(f.orbitA) * orbitR;
+        f.y = f.oy + Math.sin(f.orbitA) * orbitR;
+    });
     s2Draw();
     requestAnimationFrame(s2Loop);
 }
