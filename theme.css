@@ -10,10 +10,10 @@
     #modeCard, #s2ModeCard { min-width: unset; width: 70vw; padding: 16px 20px; }
     #modeArrowLeft, #modeArrowRight { font-size: 1.5rem; padding: 0 4px; }
 
-    #s2HUD { gap: 6px; flex-wrap: wrap; justify-content: center; width: 90vw; }
+    #s2HUD { gap: 6px; flex-wrap: wrap; justify-content: center; width: 90vw;  max-width: 65vw; }
     #s2ScoreDisplay, #s2AliveDisplay, #s2KillDisplay, #s2TimerDisplay { font-size: 0.75rem; padding: 5px 10px; }
-    #s2Minimap { width: 80px; height: 80px; top: 10px; right: 10px; }
-    #s2BoostBtn { width: 65px; height: 65px; bottom: 20px; right: 20px; }
+    #s2Minimap { width: 80px; height: 80px; top: 60px; right: 10px; }
+    #s2BoostBtn { width: 65px; height: 65px; bottom: 20px; left: 20px; opacity: 0.85; z-index: 20; }
 }
 
 #gameselect, #modeselect, #settingsscreen, #s2modeselect {
