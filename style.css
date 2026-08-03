@@ -543,6 +543,72 @@ body::after {
     font-size: 0.9rem;
     font-weight: 600;
 }
+
+#s2modeselect.hidden { display: none; }
+#s2modeselect {
+    position: fixed; inset: 0; background: #16181c;
+    display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 24px;
+}
+#s2ModeCarousel {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+}
+#s2ModeTabs {
+    display: flex; gap: 6px;
+    background: rgba(255,255,255,0.05);
+    padding: 4px; border-radius: 20px;
+}
+.s2ModeTab {
+    padding: 6px 14px; border-radius: 16px;
+    font-size: 0.8rem; color: #8b8b98;
+    cursor: pointer; transition: all 0.15s ease;
+}
+.s2ModeTab.active {
+    background: #c9944f; color: #16181c; font-weight: 600;
+}
+#s2ModeCard {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 24px 36px;
+    text-align: center;
+    min-width: 260px;
+    color: #ece7de;
+}
+#s2ModeCard h3 { margin-bottom: 6px; }
+#s2ModeCard p { font-size: 0.85rem; opacity: 0.75; }
+#s2startbtn {
+    font-size: 1.3rem; font-weight: 600;
+    padding: 14px 36px;
+    background: #c9944f; color: #16181c;
+    border: none; border-radius: 6px;
+    cursor: pointer; font-family: inherit;
+    transition: transform 0.15s ease;
+}
+#s2startbtn:hover { transform: translateY(-2px); }
+#s2TimerDisplay {
+    background: rgba(255,255,255,0.08);
+    color: #ece7de;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+#s2TimerDisplay.hidden { display: none; }
+
+#backfroms2modebtn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    color: #ece7de;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: color 0.15s ease;
+}
+#backfroms2modebtn:hover {
+    color: #c9944f;
+}
+
 @media (max-width: 768px) {
     #homescreen {
         justify-content: center;
