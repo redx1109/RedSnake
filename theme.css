@@ -1,0 +1,29 @@
+@media (max-width: 768px) {
+    #homescreen { justify-content: center; padding-top: 0; }
+    #homescreen h1 { font-size: 15vw; margin-top: -20vh; }
+    #playbtn { font-size: 10vw; }
+
+    #gameselect { flex-direction: column; gap: 16px; padding: 20px; }
+    .gamecard { width: 80vw; max-width: 320px; }
+
+    #modeCardWrap { gap: 8px; }
+    #modeCard, #s2ModeCard { min-width: unset; width: 70vw; padding: 16px 20px; }
+    #modeArrowLeft, #modeArrowRight { font-size: 1.5rem; padding: 0 4px; }
+
+    #s2HUD { gap: 6px; flex-wrap: wrap; justify-content: center; width: 90vw; }
+    #s2ScoreDisplay, #s2AliveDisplay, #s2KillDisplay, #s2TimerDisplay { font-size: 0.75rem; padding: 5px 10px; }
+    #s2Minimap { width: 80px; height: 80px; top: 10px; right: 10px; }
+    #s2BoostBtn { width: 65px; height: 65px; bottom: 20px; right: 20px; }
+}
+
+#gameselect, #modeselect, #settingsscreen, #s2modeselect {
+    animation: fadeUp 0.35s ease both;
+}
+
+#gamecontainer, #snake2container {
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+button:active, .gamecard:active { transform: scale(0.95); transition: transform 0.1s ease; }
+
+@keyframes boostPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,122,26,0.4);} 50% { box-shadow: 0 0 0 12px rgba(255,122,26,0);} }
+#s2BoostBtn:active { animation: boostPulse 0.5s ease; }
