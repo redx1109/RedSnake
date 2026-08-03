@@ -27,7 +27,7 @@ let s2ZoneRadius = WORLD_SIZE * 0.6;
 let s2ZoneCenter = { x: WORLD_SIZE/2, y: WORLD_SIZE/2 };
 let s2ZoneShrinkInterval = null;
 let s2LastKillTime = 0;
-const S2_MAX_TURN_RATE = 0.15; // max radians a snake can turn per frame — smaller = wider turning radius
+const S2_MAX_TURN_RATE = 0.05; // max radians a snake can turn per frame — smaller = wider turning radius
 let s2HuntTimeLeft = 0;
 let s2HuntInterval = null;
 
