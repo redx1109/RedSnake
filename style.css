@@ -421,6 +421,128 @@ body::after {
 #modeCard h3 { margin-bottom: 6px; font-family: 'Sora', sans-serif; }
 #modeCard p { font-size: 0.85rem; opacity: 0.75; }
 
+#roundCountdown.hidden { display: none; }
+#roundCountdown {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.6);
+    z-index: 30;
+    color: #ece7de;
+    font-size: 5rem;
+    font-weight: 700;
+}
+#snake2container.hidden { display: none; }
+#snake2container {
+    position: fixed; inset: 0;
+}
+#snake2canvas {
+    width: 100%; height: 100%; display: block;
+    background: #16181c;
+}
+#s2ClickHint {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #ece7de;
+    background: rgba(0,0,0,0.5);
+    padding: 8px 16px;
+    border-radius: 12px;
+    pointer-events: none;
+    z-index: 20;
+}
+
+#s2Joystick {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,255,255,0.15);
+    z-index: 15;
+    touch-action: none;
+    display: none;
+    transform: translate(-50%, -50%);
+    transition: opacity 0.15s ease;
+}
+#s2JoystickKnob {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    top: 30px;
+    left: 30px;
+    pointer-events: none;
+}
+#s2BoostBtn {
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255,122,26,0.25);
+    border: 2px solid rgba(255,122,26,0.5);
+    color: #FF7A1A;
+    font-weight: 700;
+    font-size: 0.9rem;
+    z-index: 15;
+    user-select: none;
+    touch-action: none;
+}
+#s2BoostBtn:active {
+    background: rgba(255,122,26,0.5);
+}
+
+#s2HUD {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    z-index: 12;
+}
+#s2ScoreDisplay, #s2AliveDisplay {
+    background: rgba(255,255,255,0.08);
+    color: #ece7de;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+#s2GameoverPopup.hidden { display: none; }
+#s2GameoverPopup {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 40;
+}
+#s2Minimap {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 120px;
+    height: 120px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.15);
+    z-index: 15;
+}
+
+#s2KillDisplay {
+    background: rgba(255,255,255,0.08);
+    color: #ece7de;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
 @media (max-width: 768px) {
     #homescreen {
         justify-content: center;
