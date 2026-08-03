@@ -81,7 +81,8 @@
         <div id="comboIndicator" class="hidden">Combo: <span id="comboCount">0</span>/5 (<span id="comboTimeLeft">5</span>s)</div>
         <div id="score">Score: <span id="scoree">0</span></div>
         <div id="scorePopup" class="hidden">+5</div>
-        <div id="roundScore" class="hidden">Round <span id="roundNum">1</span> — <span id="myWins">0</span> : <span id="oppWins">0</span></div>
+        <div id="roundCountdown" class="hidden"><span id="roundCountdownNum">3</span></div>
+        <div id="roundScore" class="hidden">Round <span id="roundNum">1</span>/3</div>
         <div id="splitwrap">
             <canvas id="gamescreen"></canvas>
             <canvas id="oppscreen" class="hidden"></canvas>
@@ -107,7 +108,30 @@
         <button id="saveSettingsBtn">Save</button>
         <button id="backHomeBtn">Back</button>
     </div>
+    <div id="snake2container" class="hidden">
+        <canvas id="snake2canvas"></canvas>
+        <canvas id="s2Minimap"></canvas>
+        <div id="s2HUD">
+            <div id="s2ScoreDisplay">Length: <span id="s2ScoreNum">40</span></div>
+            <div id="s2AliveDisplay">Alive: <span id="s2AliveNum">100</span></div>
+            <div id="s2KillDisplay">Kills: <span id="s2KillNum">0</span></div>
+        </div>
+        <div id="s2ClickHint">Click to start steering</div>
+        <div id="s2Joystick">
+            <div id="s2JoystickKnob"></div>
+            <button id="s2BoostBtn">BOOST</button>
+        </div>
+        <div id="s2GameoverPopup" class="hidden">
+            <div class="popup-box">
+                <p>Length: <span id="s2FinalLength">0</span></p>
+                <p>Kills: <span id="s2FinalKills">0</span></p>
+                <button id="s2RestartBtn">Restart</button>
+                <button id="s2HomeBtn">Home</button>
+            </div>
+        </div>
+    </div>
     <script src="script.js"></script>
+    <script src="snake2.js"></script>
     <script src="settings.js"></script>
     <script src="networking.js"></script>
     <script src="navigation.js"></script>
