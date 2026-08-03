@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="keyword" content="redsnake,snake game,snake">
-    <meta name="description" content="RedSnake is simple clean minimal old style Snake game.">
+    <meta name="description" content="Play Red Snake, a modern multiplayer snake game featuring online matchmaking, AI battles, multiple game modes, arena combat, and endless fun.">
     <link rel="icon" href="favicon.png" type="image/x-icon">
     <link rel="apple-touch-icon" href="favicon.png" type="image/x-icon">
     <link rel="manifest" href="manifest.json">
     <title>RedSnake</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="theme.css">
 </head>
 <body>
     <div id="homescreen">
@@ -158,6 +159,10 @@
     <script src="snake2.0/input.js"></script>
     <script src="snake2.0/render.js"></script>
     <script src="snake2.0/core.js"></script>
-
+    <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js');
+  }
+</script>
 </body>
 </html>
