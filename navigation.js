@@ -37,10 +37,7 @@ document.querySelector('#classiccard').addEventListener('click', () => {
     document.querySelector('#gameselect').classList.add('hidden');
     document.querySelector('#modeselect').classList.remove('hidden');
 });
-document.querySelector('#snake2card').addEventListener('click', () => {
-    document.querySelector('#gameselect').classList.add('hidden');
-    alert('Snake 2.0 coming soon!'); // placeholder
-});
+
 
 document.querySelector('#backfromodebtn').addEventListener('click', () => {
     document.querySelector('#modeselect').classList.add('hidden');
@@ -123,11 +120,38 @@ document.querySelectorAll('.modeTab').forEach((tab, i) => {
 
 document.querySelector('#restartbtn').addEventListener('click', () => {
     document.querySelector('#gameoverpopup').classList.add('hidden');
-    if (matchMode === 'rounds' && soloLivesLeft <= 0) {
-        document.querySelector('#homebtn').click();
-        return;
-    }
-    startSoloMode();
+    document.querySelector('#restartbtn').textContent = 'Restart';
+    startSoloMode(); // resets soloRoundNum/soloTotalScore back to fresh start
 });
 
 updateModeCard(); // initialize on load
+
+document.querySelector('#snake2card').addEventListener('click', () => {
+    document.querySelector('#gameselect').classList.add('hidden');
+    document.querySelector('#s2modeselect').classList.remove('hidden');
+});
+document.querySelector('#backfroms2modebtn').addEventListener('click', () => {
+    document.querySelector('#s2modeselect').classList.add('hidden');
+    document.querySelector('#gameselect').classList.remove('hidden');
+});
+document.querySelector('#s2startbtn').addEventListener('click', () => {
+    document.querySelector('#s2modeselect').classList.add('hidden');
+    document.querySelector('#snake2container').classList.remove('hidden');
+    initSnake2();
+});
+
+const s2Modes = [
+    { key: 'endless', title: 'Endless', desc: 'Survive and grow, no timer, no limits.' },
+    { key: 'battleroyale', title: 'Battle Royale', desc: 'Shrinking zone. Last snake alive wins.' },
+    { key: 'hunt', title: 'Hunt Mode', desc: 'No food. Kill snakes to grow. Most kills wins.' },
+    { key: 'timeattack', title: 'Time Attack', desc: 'Get a kill every 60s or you die. Last one standing wins.' }
+];
+document.querySelectorAll('.s2ModeTab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        const m = s2Modes.find(m => m.key === tab.dataset.mode);
+        s2Mode = m.key;
+        document.querySelector('#s2ModeCardTitle').textContent = m.title;
+        document.querySelector('#s2ModeCardDesc').textContent = m.desc;
+        document.querySelectorAll('.s2ModeTab').forEach(t => t.classList.toggle('active', t === tab));
+    });
+});
