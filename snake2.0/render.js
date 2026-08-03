@@ -13,9 +13,12 @@ function s2Draw() {
         grad.addColorStop(0, f.color);
         grad.addColorStop(1, f.color);
         s2ctx.fillStyle = grad;
+        s2ctx.shadowColor = f.color;
+        s2ctx.shadowBlur = 14;
         s2ctx.beginPath();
         s2ctx.arc(sx, sy, 6, 0, Math.PI*2);
         s2ctx.fill();
+        s2ctx.shadowBlur = 0; 
     });
     s2BigFoods.forEach(f => {
         const sx = f.x - s2CameraX, sy = f.y - s2CameraY;
@@ -24,9 +27,12 @@ function s2Draw() {
         grad.addColorStop(0, f.color);
         grad.addColorStop(1, f.color);
         s2ctx.fillStyle = grad;
+        s2ctx.shadowColor = f.color;
+        s2ctx.shadowBlur = 10;
         s2ctx.beginPath();
         s2ctx.arc(sx, sy, 10, 0, Math.PI*2);
         s2ctx.fill();
+        s2ctx.shadowBlur = 0; 
     });
     s2Bots.forEach(bot => {
         if (!bot.alive) return;
@@ -37,7 +43,11 @@ function s2Draw() {
             const sy = bot.snake[i].y - s2CameraY;
             if (sx < -30 || sx > s2canvas.width+30 || sy < -30 || sy > s2canvas.height+30) continue;
             const t = i / bot.snake.length;
-            s2ctx.fillStyle = `rgb(${Math.round(bStart.r*(1-t*0.35))},${Math.round(bStart.g*(1-t*0.35))},${Math.round(bStart.b*(1-t*0.35))})`;
+            const br = Math.round(bStart.r*(1-t*0.35)), bg = Math.round(bStart.g*(1-t*0.35)), bb = Math.round(bStart.b*(1-t*0.35));
+            const bGrad = s2ctx.createRadialGradient(sx-botThicknessNow*0.15, sy-botThicknessNow*0.15, 1, sx, sy, botThicknessNow/2);
+            bGrad.addColorStop(0, `rgb(${Math.min(255,br+40)},${Math.min(255,bg+40)},${Math.min(255,bb+40)})`);
+            bGrad.addColorStop(1, `rgb(${br},${bg},${bb})`);
+            s2ctx.fillStyle = bGrad;
             s2ctx.beginPath();
             s2ctx.arc(sx, sy, botThicknessNow/2, 0, Math.PI*2);
             s2ctx.fill();
@@ -63,9 +73,13 @@ function s2Draw() {
         const r = Math.round(start.r * (1 - t*0.35));
         const g = Math.round(start.g * (1 - t*0.35));
         const b = Math.round(start.b * (1 - t*0.35));
-        s2ctx.fillStyle = `rgb(${r},${g},${b})`;
+        const sx = s2Snake[i].x - s2CameraX, sy = s2Snake[i].y - s2CameraY;
+        const grad = s2ctx.createRadialGradient(sx-thickness*0.15, sy-thickness*0.15, 1, sx, sy, thickness/2);
+        grad.addColorStop(0, `rgb(${Math.min(255,r+40)},${Math.min(255,g+40)},${Math.min(255,b+40)})`);
+        grad.addColorStop(1, `rgb(${r},${g},${b})`);
+        s2ctx.fillStyle = grad;
         s2ctx.beginPath();
-        s2ctx.arc(s2Snake[i].x - s2CameraX, s2Snake[i].y - s2CameraY, thickness/2, 0, Math.PI*2);
+        s2ctx.arc(sx, sy, thickness/2, 0, Math.PI*2);
         s2ctx.fill();
         s2ctx.strokeStyle = 'rgba(0,0,0,0.15)';
         s2ctx.lineWidth = 1;
