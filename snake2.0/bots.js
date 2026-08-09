@@ -67,18 +67,16 @@ function s2UpdateBot(bot) {
             return Math.hypot(lookX - segX, lookY - segY) < 30;
         }
 
-        for (let i = 15; i < s2Snake.length; i += 3) {
-            if (checkDanger(s2Snake[i].x, s2Snake[i].y)) { avoiding = true; break; }
-        }
-        if (!avoiding) {
-            for (const other of s2Bots) {
-                if (other === bot || !other.alive) continue;
-                const oHead = other.snake[0];
-                if (Math.hypot(head.x - oHead.x, head.y - oHead.y) > 200) continue;
-                for (let i = 0; i < other.snake.length; i += 3) {
-                    if (checkDanger(other.snake[i].x, other.snake[i].y)) { avoiding = true; break; }
+        const lcx = Math.floor(lookX/S2_CELL), lcy = Math.floor(lookY/S2_CELL);
+        outer:
+        for (let gx = lcx-1; gx <= lcx+1; gx++) {
+            for (let gy = lcy-1; gy <= lcy+1; gy++) {
+                const cell = s2Grid.get(gx+','+gy);
+                if (!cell) continue;
+                for (const item of cell) {
+                    if (item.owner === bot.id) continue;
+                    if (checkDanger(item.x, item.y)) { avoiding = true; break outer; }
                 }
-                if (avoiding) break;
             }
         }
         bot.avoiding = avoiding;
@@ -133,15 +131,20 @@ function s2UpdateBot(bot) {
     // collision/death check
     const botThicknessForCollision = Math.min(24 + bot.snake.length * 0.05, 60);
     let killedByPlayer = false;
-    for (let i = 5; i < s2Snake.length; i++) {
-        const seg = s2Snake[i];
-        if (Math.hypot(newHead.x - seg.x, newHead.y - seg.y) < botThicknessForCollision/2 + 10) {
-            killedByPlayer = true;
-            break;
+    const kcx = Math.floor(newHead.x/S2_CELL), kcy = Math.floor(newHead.y/S2_CELL);
+    outerK:
+    for (let gx = kcx-1; gx <= kcx+1; gx++) {
+        for (let gy = kcy-1; gy <= kcy+1; gy++) {
+            const cell = s2Grid.get(gx+','+gy);
+            if (!cell) continue;
+            for (const item of cell) {
+                if (item.owner !== 'player') continue;
+                if (Math.hypot(newHead.x - item.x, newHead.y - item.y) < botThicknessForCollision/2 + 10) { killedByPlayer = true; break outerK; }
+            }
         }
     }
     if (killedByPlayer || s2CheckHeadCollision(newHead.x, newHead.y, botThicknessForCollision, bot.id)) {
-        s2DropFoodTrail(bot.snake);
+        s2DropFoodTrail(bot.snake, bot.color);
         bot.alive = false;
         if (killedByPlayer) { s2PlayerKills++; s2LastKillTime = Date.now(); }
         return;
@@ -160,11 +163,19 @@ function s2IsBotEncircled(bot) {
     const radius = 150;
     const bins = 12;
     const covered = new Array(bins).fill(false);
-    for (const seg of s2Snake) {
-        const dx = seg.x - head.x, dy = seg.y - head.y;
-        if (Math.hypot(dx, dy) < radius) {
-            const bin = Math.floor(((Math.atan2(dy, dx) + Math.PI) / (2*Math.PI)) * bins) % bins;
-            covered[bin] = true;
+    const cx = Math.floor(head.x/S2_CELL), cy = Math.floor(head.y/S2_CELL);
+    const span = Math.ceil(radius/S2_CELL);
+    for (let gx = cx-span; gx <= cx+span; gx++) {
+        for (let gy = cy-span; gy <= cy+span; gy++) {
+            const cell = s2Grid.get(gx+','+gy);
+            if (!cell) continue;
+            for (const item of cell) {
+                const dx = item.x - head.x, dy = item.y - head.y;
+                if (Math.hypot(dx, dy) < radius) {
+                    const bin = Math.floor(((Math.atan2(dy, dx) + Math.PI) / (2*Math.PI)) * bins) % bins;
+                    covered[bin] = true;
+                }
+            }
         }
     }
     return covered.every(c => c);
