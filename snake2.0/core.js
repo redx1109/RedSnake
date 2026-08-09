@@ -44,8 +44,8 @@ function initSnake2() {
     document.addEventListener('mousemove', s2HandleMouse);
     s2SetupJoystick();
     requestAnimationFrame(s2Loop);
-    if (s2Mode === 'hunt') { s2Foods = []; s2BigFoods = []; }
-        else { s2InitFood(); s2InitBigFood(); }
+    s2InitFood();
+    s2InitBigFood();
         s2InitBots();
         document.querySelector('#s2TimerDisplay').classList.toggle('hidden', s2Mode !== 'hunt');
         s2SetupBoostButton();
@@ -54,6 +54,12 @@ function initSnake2() {
 
 function s2Loop() {
     if (!s2Running) return;
+    s2Grid.clear();
+    function s2GridKey(x,y){ return (Math.floor(x/S2_CELL))+','+(Math.floor(y/S2_CELL)); }
+    function s2GridAdd(x,y,owner){ const k=s2GridKey(x,y); if(!s2Grid.has(k)) s2Grid.set(k,[]); s2Grid.get(k).push({x,y,owner}); }
+    const pStep = Math.max(2, Math.floor(s2Snake.length/150));
+    s2Snake.forEach((seg,i)=>{ if(i>=15 && i%pStep===0) s2GridAdd(seg.x, seg.y, 'player'); });
+    s2Bots.forEach(b=>{ if(!b.alive) return; const bStep = Math.max(3, Math.floor(b.snake.length/150)); b.snake.forEach((seg,i)=>{ if(i%bStep===0) s2GridAdd(seg.x, seg.y, b.id); }); });
     const head = s2Snake[0];
     const distJ = Math.hypot(s2JoystickX, s2JoystickY);
     let dx, dy;
@@ -198,28 +204,18 @@ function s2PointInPolygon(px, py, poly) {
 
 function s2CheckHeadCollision(headX, headY, headThickness, excludeSelf) {
     // check against player
-    if (!excludeSelf || excludeSelf !== 'player') {
-        for (let i = 15; i < s2Snake.length; i++) { // skip first few segments near own head
-            const seg = s2Snake[i];
-            if (Math.hypot(headX - seg.x, headY - seg.y) < headThickness/2 + 10) {
-                return true;
+    const cx = Math.floor(headX/S2_CELL), cy = Math.floor(headY/S2_CELL);
+        for (let gx = cx-1; gx <= cx+1; gx++) {
+            for (let gy = cy-1; gy <= cy+1; gy++) {
+                const cell = s2Grid.get(gx+','+gy);
+                if (!cell) continue;
+                for (const item of cell) {
+                    if (item.owner === excludeSelf) continue;
+                    if (Math.hypot(headX - item.x, headY - item.y) < headThickness/2 + 10) return true;
+                }
             }
         }
-    }
-    // check against all bots
-    for (const bot of s2Bots) {
-        if (!bot.alive) continue;
-        if (excludeSelf === bot.id) continue;
-        const botHead = bot.snake[0];
-        if (Math.hypot(headX - botHead.x, headY - botHead.y) > 300) continue;
-        for (let i = 3; i < bot.snake.length; i += 3) {
-            const seg = bot.snake[i];
-            if (Math.hypot(headX - seg.x, headY - seg.y) < headThickness/2 + 10) {
-                return true;
-            }
-        }
-    }
-    return false;
+        return false;
 }
 
 document.querySelector('#s2RestartBtn').addEventListener('click', () => {
