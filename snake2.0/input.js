@@ -19,7 +19,7 @@ function s2SetupBoostButton() {
             if (s2Snake.length > s2Length) {
                 const dropped = s2Snake.pop();
                 if (s2Foods.length + s2BigFoods.length < S2_MAX_FOOD) {
-                    s2Foods.push({ x: dropped.x, y: dropped.y });
+                    s2Foods.push({ x: dropped.x, y: dropped.y, color: `hsl(${Math.floor(Math.random()*360)},90%,60%)`, ox: dropped.x, oy: dropped.y, orbitA: Math.random()*Math.PI*2 });
                 }
             } else {
                 stopBoost();
