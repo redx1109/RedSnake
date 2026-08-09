@@ -5,8 +5,16 @@ let myUsername = localStorage.getItem('rs_username') || '';
 let onlineMode = false;
 let soundOn = localStorage.getItem('rs_sound') !== 'false';
 const eatSound = new Audio('food-eating.mp3'); // change to .wav if that's your file type
+let lastEatSoundTime = 0;
+let snakeSkin = localStorage.getItem('rs_skin') || 'classic';
+let slowRevertTimer = null;
+let gameGen = 0;
+
 function playEatSound() {
     if (!soundOn) return;
+    const now = Date.now();
+    if (now - lastEatSoundTime < 80) return;
+    lastEatSoundTime = now;
     eatSound.currentTime = 0;
     eatSound.play().catch(() => {});
 }
@@ -22,7 +30,14 @@ const screenbackground = '#16181c';
 const foodcolor = '#FA3604';
 const size = Math.max(15, Math.round(Math.min(gameboard.clientWidth, gameboard.clientHeight) / 20 / 10) * 10);
 let ate = false;
-let highscore = Number(localStorage.getItem('rs_high')) || 0;
+let scoreModeStartTime = 0;
+function getHighKey(mode) { return 'rs_high_' + mode; }
+function getHighScore(mode) {
+    return Number(localStorage.getItem(getHighKey(mode))) || 0;
+}
+function setHighScore(mode, value) {
+    localStorage.setItem(getHighKey(mode), value);
+}
 let nextX = size, nextY = 0;
 let running = true;
 let x=size;
@@ -56,7 +71,8 @@ let soloBestScore = 0;
 let timeTroubleInterval = null;
 let timeLeftSeconds = 60;
 let foodRespawnTimer = null;
-
+let soloTotalScore = 0;
+let soloRoundNum = 1;
 gameboard.addEventListener('touchstart', e => {
     tx = e.touches[0].clientX;
     ty = e.touches[0].clientY;
