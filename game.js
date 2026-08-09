@@ -10,8 +10,18 @@ function resizeCanvas(){
 }
 
 function restartgame(){
+    gameGen++;
     speed = 125;
+    clearTimeout(slowRevertTimer);
     score = 0;
+    slowActive = false;
+    blueFruitActive = false;
+    goldFruitActive = false;
+    slowFruitCooldown = false;
+    comboCount = 0;
+    clearTimeout(comboTimer);
+    clearInterval(window.comboCountdownInterval);
+    document.querySelector('#comboIndicator').classList.add('hidden');
     x = size;
     y = 0;
     nextX = size;
@@ -24,7 +34,7 @@ function restartgame(){
     {x:0, y:0},
     ];
     gamestart();
-};  
+};
 
 function gamestart(){
     running=true;
@@ -40,6 +50,7 @@ function clearscreen(){
 };
 
 function changedirection(event){
+    if (event.target.tagName === 'INPUT') return;
     const keypressed = event.keyCode;
     const left = 37;
     const up = 38;
@@ -88,10 +99,55 @@ function hexToRgb(hex) {
 }
 
 function dsnake(){
+    const start = hexToRgb(snakeHeadColor);
+    const end = { r: start.r * 0.8, g: start.g * 0.8, b: start.b * 0.8 };
+
+    if (snakeSkin !== 'classic') {
+        ctx.save();
+        ctx.strokeStyle = snakeHeadColor;
+        ctx.lineWidth = size * 0.92;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        if (snakeSkin === 'neon') { ctx.shadowColor = snakeHeadColor; ctx.shadowBlur = 14; }
+        ctx.beginPath();
+        snake.forEach((p, i) => {
+            const px = p.x + size/2, py = p.y + size/2;
+            if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        });
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.restore();
+
+        const tail = snake[snake.length - 1];
+        const prev = snake[snake.length - 2] || tail;
+        const ux = (tail.x - prev.x)/size, uy = (tail.y - prev.y)/size;
+        const px = -uy, py = ux;
+        const baseX = tail.x + size/2 - ux*size*0.46, baseY = tail.y + size/2 - uy*size*0.46;
+        ctx.fillStyle = snakeHeadColor;
+        ctx.beginPath();
+        ctx.moveTo(baseX + px*size*0.46, baseY + py*size*0.46);
+        ctx.lineTo(baseX - px*size*0.46, baseY - py*size*0.46);
+        ctx.lineTo(tail.x + size/2 + ux*size*0.46, tail.y + size/2 + uy*size*0.46);
+        ctx.closePath();
+        ctx.fill();
+
+        const head = snake[0];
+        const hx = x/size, hy = y/size;
+        const hpx = -hy, hpy = hx;
+        const hcx = head.x + size/2, hcy = head.y + size/2;
+        const tipx = hcx + hx*size*0.95, tipy = hcy + hy*size*0.95;
+        ctx.fillStyle = snakeHeadColor;
+        ctx.beginPath();
+        ctx.moveTo(hcx - hx*size*0.4 + hpx*size*0.55, hcy - hy*size*0.4 + hpy*size*0.55);
+        ctx.quadraticCurveTo(tipx, tipy, hcx - hx*size*0.4 - hpx*size*0.55, hcy - hy*size*0.4 - hpy*size*0.55);
+        ctx.closePath();
+        ctx.fill();
+    }
+
     snake.forEach((snakePart, i) => {
         let scale = 1;
         if (eatPulse >= 0){
-            const offset = eatPulse - i;
+            const offset = Math.round(eatPulse) - i;
             if (offset === 0) scale = 1.6;
             else if (offset === 1) scale = 1.3;
             else if (offset === 2) scale = 1.1;
@@ -99,23 +155,26 @@ function dsnake(){
         const s = size * scale;
         const cx = snakePart.x + size/2 - s/2;
         const cy = snakePart.y + size/2 - s/2;
-        const start = hexToRgb(snakeHeadColor);
-        const end = { r: start.r * 0.8, g: start.g * 0.8, b: start.b * 0.8 };
-
         const t = Math.min(i / (snake.length - 1), 1);
-
         const r = Math.round(start.r + (end.r - start.r) * t);
         const g = Math.round(start.g + (end.g - start.g) * t);
         const b = Math.round(start.b + (end.b - start.b) * t);
 
-        ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-        ctx.beginPath();
-        ctx.roundRect(cx, cy, s, s, 6);
-        
-        ctx.fill();
-        ctx.strokeStyle = "#16181c";
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        if (snakeSkin === 'classic') {
+            ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+            ctx.beginPath();
+            ctx.roundRect(cx, cy, s, s, 6);
+            ctx.fill();
+            ctx.strokeStyle = "#16181c";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        } else if (scale > 1 && i !== 0) {
+            ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+            ctx.beginPath();
+            ctx.arc(snakePart.x + size/2, snakePart.y + size/2, size*0.5*scale, 0, Math.PI*2);
+            ctx.fill();
+        }
+
         if (i === 0 && Math.floor(Date.now()/300) % 2 === 0) {
             const dx = x/size, dy = y/size;
             const tipx = cx + s/2 + dx*s*0.75;
@@ -145,30 +204,33 @@ function dsnake(){
             ctx.fill();
             const distToFood = Math.hypot((cx+s/2)-(fx+size/2), (cy+s/2)-(fy+size/2));
             if (distToFood < size * 1.5) {
-                const dx = x/size, dy = y/size;
-                const px = -dy, py = dx;
+                const px2 = -dy, py2 = dx;
                 const mx = cx + s/2 + dx*s*0.45;
                 const my = cy + s/2 + dy*s*0.45;
                 ctx.fillStyle = "#111";
                 ctx.beginPath();
-                ctx.moveTo(mx + px*s*0.18, my + py*s*0.18);
+                ctx.moveTo(mx + px2*s*0.18, my + py2*s*0.18);
                 ctx.lineTo(mx + dx*s*0.25, my + dy*s*0.25);
-                ctx.lineTo(mx - px*s*0.18, my - py*s*0.18);
+                ctx.lineTo(mx - px2*s*0.18, my - py2*s*0.18);
                 ctx.closePath();
                 ctx.fill();
             }
         }
-    })
+    });
+
     if(!ate){ snake.pop(); }
     ate = false;
     if (eatPulse >= 0){
-        eatPulse+=2;
+        eatPulse+=1.5;
         if (eatPulse > snake.length + 2) eatPulse = -1;
     }
-};
+}
+
 function time(){
+    const myGen = gameGen;
     if(running){
         setTimeout(()=>{
+            if (myGen !== gameGen) return;
             clearscreen();
             food();
             movesnake();
@@ -192,11 +254,12 @@ function movesnake(){
         playEatSound();
         blueFruitActive = false;
         bfx = null; bfy = null;
+        eatPulse = 0;
         if (!slowActive) {
             slowActive = true;
             const oldSpeed = speed;
             speed += 60;
-            setTimeout(() => { speed = oldSpeed; slowActive = false; }, 10000);
+            slowRevertTimer = setTimeout(() => { speed = oldSpeed; slowActive = false; }, 10000);
         }
     }
     if (goldFruitActive && head.x === gfx && head.y === gfy) {
@@ -204,11 +267,12 @@ function movesnake(){
         goldFruitActive = false;
         goldFruitFlashing = false;
         gfx = null; gfy = null;
+        eatPulse = 0;
         score += 5;
         scoretext.textContent = score;
-        if (score > highscore){
-            highscore = score;
-            localStorage.setItem('rs_high', highscore);
+        if (matchMode === 'survival' || matchMode === 'timetrouble') {
+            const currentBest = getHighScore(matchMode);
+            if (score > currentBest) setHighScore(matchMode, score);
         }
         const popup = document.querySelector('#scorePopup');
         popup.classList.remove('show');
@@ -222,6 +286,9 @@ function movesnake(){
         clearTimeout(foodRespawnTimer);
         score+=1;
         if (matchMode === 'score' && score >= 10) {
+            const elapsedSec = ((Date.now() - scoreModeStartTime) / 1000).toFixed(1);
+            const currentBest = getHighScore('score');
+            if (!currentBest || elapsedSec < currentBest) setHighScore('score', elapsedSec);
             running = false;
         }
         playEatSound();
@@ -256,9 +323,9 @@ function movesnake(){
         }
 
         scoretext.textContent = score;
-        if (score > highscore){
-            highscore = score;
-            localStorage.setItem('rs_high', highscore);
+        if (matchMode === 'survival' || matchMode === 'timetrouble') {
+            const currentBest = getHighScore(matchMode);
+            if (score > currentBest) setHighScore(matchMode, score);
         }
         spawnfood();
         ate = true;
@@ -390,31 +457,60 @@ function dgameover(){
             document.querySelector('#finalscore').textContent = `You won! Score: ${score}`;
             document.querySelector('#gameoverpopup').classList.remove('hidden');
         } else if (matchMode === 'rounds') {
-            soloBestScore = Math.max(soloBestScore, score);
-            soloLivesLeft--;
-            if (soloLivesLeft > 0) {
-                document.querySelector('#finalscore').textContent = `Round lost. Score: ${score} — ${soloLivesLeft} lives left`;
-                document.querySelector('#gameoverpopup').classList.remove('hidden');
+            soloTotalScore += score;
+            if (soloRoundNum < 3) {
+                soloRoundNum++;
+                document.querySelector('#roundNum').textContent = soloRoundNum;
+                startRoundCountdown(() => restartgame());
             } else {
-                document.querySelector('#finalscore').textContent = `Out of lives! Best score: ${soloBestScore}`;
+                document.querySelector('#finalscore').textContent = `All 3 rounds done! Total score: ${soloTotalScore}`;
                 document.querySelector('#gameoverpopup').classList.remove('hidden');
+                document.querySelector('#restartbtn').classList.remove('hidden');
+                document.querySelector('#restartbtn').textContent = 'Play Again';
+                const currentBest = getHighScore('rounds');
+                if (soloTotalScore > currentBest) setHighScore('rounds', soloTotalScore);
             }
         } else {
             // survival or timetrouble default
-            document.querySelector('#finalscore').textContent = `${score} (Best: ${highscore})`;
+            document.querySelector('#finalscore').textContent = `${score} (Best: ${getHighScore(matchMode)})`;
             document.querySelector('#gameoverpopup').classList.remove('hidden');
         }
     }, 300);
     running = false;
 };
 
+function startRoundCountdown(callback) {
+    let n = 3;
+    const el = document.querySelector('#roundCountdown');
+    const numEl = document.querySelector('#roundCountdownNum');
+    el.classList.remove('hidden');
+    numEl.textContent = n;
+    const iv = setInterval(() => {
+        n--;
+        if (n <= 0) {
+            clearInterval(iv);
+            el.classList.add('hidden');
+            callback();
+        } else {
+            numEl.textContent = n;
+        }
+    }, 1000);
+}
+
 function startSoloMode() {
     if (matchMode === 'rounds') {
-        soloLivesLeft = 3;
-        soloBestScore = 0;
+        soloTotalScore = 0;
+        soloRoundNum = 1;
+        document.querySelector('#roundScore').classList.remove('hidden');
+        document.querySelector('#roundNum').textContent = soloRoundNum;
+    } else {
+        document.querySelector('#roundScore').classList.add('hidden');
     }
     restartgame();
     if (matchMode === 'timetrouble') startTimeTrouble();
+    if (matchMode === 'score') {
+        scoreModeStartTime = Date.now();
+    }
 }
 
 function startTimeTrouble() {
