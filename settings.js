@@ -6,6 +6,9 @@ document.querySelector('#settingsbtn').addEventListener('click', () => {
     document.querySelectorAll('.colorSwatch').forEach(el => {
         el.classList.toggle('selected', el.dataset.color === snakeHeadColor);
     });
+    document.querySelectorAll('.skinSwatch').forEach(el => {
+        el.classList.toggle('selected', el.dataset.skin === snakeSkin);
+    });
 });
 
 document.querySelectorAll('.colorSwatch').forEach(el => {
@@ -13,6 +16,14 @@ document.querySelectorAll('.colorSwatch').forEach(el => {
         document.querySelectorAll('.colorSwatch').forEach(s => s.classList.remove('selected'));
         el.classList.add('selected');
         snakeHeadColor = el.dataset.color;
+    });
+});
+
+document.querySelectorAll('.skinSwatch').forEach(el => {
+    el.addEventListener('click', () => {
+        document.querySelectorAll('.skinSwatch').forEach(s => s.classList.remove('selected'));
+        el.classList.add('selected');
+        snakeSkin = el.dataset.skin;
     });
 });
 
