@@ -10,10 +10,10 @@ let s2Running = false;
 let s2UsingKeyboard = false;
 const WORLD_SIZE = 6000; // world is much bigger than any screen
 let s2CameraX = 0, s2CameraY = 0;
-const S2_MAX_FOOD = 400; // hard cap on combined food + big food count
+const S2_MAX_FOOD = 350; // hard cap on combined food + big food count
 let s2Foods = []; // array of {x, y}
-const S2_FOOD_COUNT = 30; // scattered across the world at once
-const S2_BIG_FOOD_COUNT = 10;
+const S2_FOOD_COUNT = 80;// scattered across the world at once
+const S2_BIG_FOOD_COUNT = 25;
 let s2PointerLocked = false;
 let s2Boosting = false;
 const s2NormalSpeed = 2.5;
@@ -35,5 +35,8 @@ let s2JoystickX = 0, s2JoystickY = 0; // accumulated offset from center, clamped
 let s2JoystickActive = false;
 let s2JoystickCenterX = 0, s2JoystickCenterY = 0;
 let s2Bots = [];
-const S2_BOT_COUNT = 99;
+const S2_BOT_COUNT = 50;
 let s2CircleAmount = 0;
+
+let s2Grid = new Map();
+const S2_CELL = 60;
