@@ -609,6 +609,14 @@ body::after {
     color: #c9944f;
 }
 
+.skinSwatch {
+    display: inline-block; padding: 6px 14px; margin: 4px;
+    border-radius: 16px; font-size: 0.8rem; cursor: pointer;
+    background: rgba(255,255,255,0.08); color: #ece7de;
+    border: 2px solid transparent;
+}
+.skinSwatch.selected { border-color: #c9944f; }
+
 @media (max-width: 768px) {
     #homescreen {
         justify-content: center;
