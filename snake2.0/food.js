@@ -31,6 +31,8 @@ function s2InitFood() {
 }
 
 function s2DropFoodTrail(snakeArr) {
+    const toRemove = Math.floor(snakeArr.length / 4);
+    for (let i = 0; i < toRemove && s2Foods.length > 0; i++) s2Foods.shift();
     const bigChance = Math.min(0.02 + (snakeArr.length / 600), 0.25);
     for (let i = 0; i < snakeArr.length; i += 4) {
         const isBig = Math.random() < bigChance;
