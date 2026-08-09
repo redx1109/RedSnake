@@ -38,7 +38,8 @@ function s2Draw() {
         if (!bot.alive) return;
         const bStart = hexToRgb(bot.color);
         const botThicknessNow = Math.min(24 + bot.snake.length * 0.05, 60);
-        for (let i = bot.snake.length - 1; i >= 0; i -= 2) {
+        const botStep = bot.snake.length > 200 ? 4 : 2;
+        for (let i = bot.snake.length - 1; i >= 0; i -= botStep) {
             const sx = bot.snake[i].x - s2CameraX;
             const sy = bot.snake[i].y - s2CameraY;
             if (sx < -30 || sx > s2canvas.width+30 || sy < -30 || sy > s2canvas.height+30) continue;
@@ -68,7 +69,8 @@ function s2Draw() {
         }
     });
 
-    for (let i = s2Snake.length - 1; i >= 0; i--) {
+    const drawStep = s2Snake.length > 200 ? 3 : 1;
+    for (let i = s2Snake.length - 1; i >= 0; i -= drawStep) {
         const t = i / s2Snake.length;
         const r = Math.round(start.r * (1 - t*0.35));
         const g = Math.round(start.g * (1 - t*0.35));
