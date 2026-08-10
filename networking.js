@@ -158,7 +158,11 @@ function startMatchmaking() {
 }
 
 function beginConnection(isInitiator) {
-    pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+    pc = new RTCPeerConnection({ iceServers: [
+        { urls: 'stun:stun.relay.metered.ca:80' },
+        { urls: 'turn:global.relay.metered.ca:80', username: 'e8a3d1a26cb6910f8914a67d', credential: '0U4TpK+1hCt9sqIc' },
+        { urls: 'turn:global.relay.metered.ca:443?transport=tcp', username: 'e8a3d1a26cb6910f8914a67d', credential: '0U4TpK+1hCt9sqIc' }
+    ] });
     pc.onicecandidate = e => {
         if (e.candidate) matchSocket.send(JSON.stringify({ type: 'signal', to: opponentId, signal: { candidate: e.candidate } }));
     };
@@ -326,7 +330,7 @@ const oppCanvas = document.querySelector('#oppscreen');
 const oppCtx = oppCanvas.getContext('2d');
 
 function createChallenge() {
-    matchMode = document.querySelector('#matchModeSelect').value;
+    matchMode = 'rounds';
     document.querySelector('#homescreen').classList.add('hidden');
     document.querySelector('#waitingscreen').innerHTML = '<p>Creating room...</p>';
     document.querySelector('#waitingscreen').classList.remove('hidden');
