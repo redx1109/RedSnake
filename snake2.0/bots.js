@@ -97,7 +97,7 @@ function s2UpdateBot(bot) {
     let diff = targetAngle - bot.angle;
     while (diff > Math.PI) diff -= Math.PI*2;
     while (diff < -Math.PI) diff += Math.PI*2;
-    const baseTurn = Math.max(0.11, S2_MAX_TURN_RATE - (bot.snake.length * 0.0002));
+    const baseTurn = Math.max(0.05, S2_MAX_TURN_RATE - (bot.snake.length * 0.0004));
     const maxTurn = avoiding ? baseTurn * 1.8 : baseTurn;
     const clampedDiff = Math.max(-maxTurn, Math.min(maxTurn, diff));
     bot.angle += clampedDiff;
@@ -108,6 +108,10 @@ function s2UpdateBot(bot) {
     };
     bot.snake.unshift(newHead);
     bot.snake.pop();
+
+    const k = Math.floor(newHead.x/S2_CELL)+','+Math.floor(newHead.y/S2_CELL);
+    if (!s2Grid.has(k)) s2Grid.set(k, []);
+    s2Grid.get(k).push({x: newHead.x, y: newHead.y, owner: bot.id});
 
     // bot eats food too
     for (let i = s2Foods.length - 1; i >= 0; i--) {
@@ -155,6 +159,12 @@ function s2CheckEncirclement() {
     s2Bots.forEach(bot => {
         if (!bot.alive) return;
         bot.trapped = s2IsBotEncircled(bot);
+        if (bot.trapped) {
+            s2DropFoodTrail(bot.snake, bot.color);
+            bot.alive = false;
+            s2PlayerKills++;
+            s2LastKillTime = Date.now();
+        }
     });
 }
 
@@ -170,6 +180,7 @@ function s2IsBotEncircled(bot) {
             const cell = s2Grid.get(gx+','+gy);
             if (!cell) continue;
             for (const item of cell) {
+                if (item.owner === bot.id) continue; 
                 const dx = item.x - head.x, dy = item.y - head.y;
                 if (Math.hypot(dx, dy) < radius) {
                     const bin = Math.floor(((Math.atan2(dy, dx) + Math.PI) / (2*Math.PI)) * bins) % bins;
