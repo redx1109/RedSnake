@@ -150,7 +150,7 @@ function s2UpdateBot(bot) {
     if (killedByPlayer || s2CheckHeadCollision(newHead.x, newHead.y, botThicknessForCollision, bot.id)) {
         s2DropFoodTrail(bot.snake, bot.color);
         bot.alive = false;
-        if (killedByPlayer) { s2PlayerKills++; s2LastKillTime = Date.now(); }
+        if (killedByPlayer) { s2PlayerKills++; s2LastKillTime = Date.now(); s2ShowKillToast(bot.name); }
         return;
     }
 }
@@ -164,8 +164,20 @@ function s2CheckEncirclement() {
             bot.alive = false;
             s2PlayerKills++;
             s2LastKillTime = Date.now();
+            s2ShowKillToast(bot.name, true);
         }
     });
+}
+
+function s2ShowKillToast(name, trapped) {
+    const el = document.querySelector('#s2KillToast');
+    el.textContent = trapped ? `Trapped ${name}!` : `Eliminated ${name}!`;
+    el.classList.remove('hidden');
+    el.classList.remove('show');
+    void el.offsetWidth;
+    el.classList.add('show');
+    clearTimeout(window.s2ToastTimer);
+    window.s2ToastTimer = setTimeout(() => el.classList.add('hidden'), 1800);
 }
 
 function s2IsBotEncircled(bot) {
