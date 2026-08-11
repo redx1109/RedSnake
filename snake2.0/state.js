@@ -37,6 +37,6 @@ let s2JoystickCenterX = 0, s2JoystickCenterY = 0;
 let s2Bots = [];
 const S2_BOT_COUNT = 50;
 let s2CircleAmount = 0;
-
+let s2Zoom = 1;
 let s2Grid = new Map();
 const S2_CELL = 60;
