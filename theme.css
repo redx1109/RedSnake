@@ -50,3 +50,16 @@ button:active, .gamecard:active { transform: scale(0.95); transition: transform 
     80% { opacity: 1; }
     100% { opacity: 0; }
 }
+
+#s2Leaderboard {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.5);
+    color: #ece7de;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    z-index: 15;
+}
+#s2Leaderboard .you { color: #9AC606; font-weight: bold; }
