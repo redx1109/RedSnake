@@ -134,7 +134,7 @@ function s2Loop() {
     }
     s2CameraX = s2Snake[0].x - s2canvas.width/2;
     s2CameraY = s2Snake[0].y - s2canvas.height/2;
-
+    s2Zoom = Math.max(0.55, Math.min(1, 1 - (s2Snake.length - 40) * 0.0006));
     const magnetR = 50, magnetPull = 0.15;
     s2Foods.forEach(f => {
         const d = Math.hypot(s2Snake[0].x - f.x, s2Snake[0].y - f.y);
@@ -183,6 +183,11 @@ function s2Loop() {
     document.querySelector('#s2ScoreNum').textContent = s2Snake.length;
     document.querySelector('#s2AliveNum').textContent = aliveBotCount + 1; // +1 for player
     document.querySelector('#s2KillNum').textContent = s2PlayerKills;
+    const board = [{ name: myUsername || 'You', len: s2Snake.length, isPlayer: true }]
+    .concat(s2Bots.filter(b => b.alive).map(b => ({ name: b.name, len: b.snake.length })));
+    board.sort((a, b) => b.len - a.len);
+    document.querySelector('#s2Leaderboard').innerHTML = board.slice(0, 5)
+    .map((e, i) => `<div${e.isPlayer ? ' class="you"' : ''}>${i+1}. ${e.name} — ${e.len}</div>`).join('');
     const orbitR = 8, orbitSpeed = 0.05;
     s2Foods.forEach(f => {
         f.orbitA += orbitSpeed;
