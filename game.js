@@ -1,6 +1,10 @@
+
 window.addEventListener("keydown", changedirection);
 
 window.addEventListener('resize', resizeCanvas);
+let prevSnake = [];
+let lastMoveTime = performance.now();
+let lastPulseTime = performance.now();
 
 function resizeCanvas(){
     gameboard.width = gameboard.clientWidth;
@@ -42,6 +46,7 @@ function gamestart(){
     spawnfood();
     food();
     time();
+    renderLoop(gameGen);
 };
 function clearscreen(){
     ctx.fillStyle = screenbackground;
@@ -98,7 +103,16 @@ function hexToRgb(hex) {
     return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
 }
 
+function getInterpolatedSnake(){
+    const t = Math.min((performance.now() - lastMoveTime) / speed, 1);
+    return snake.map((p, i) => {
+        const prev = prevSnake[i] || p;
+        return { x: prev.x + (p.x - prev.x) * t, y: prev.y + (p.y - prev.y) * t };
+    });
+}
+
 function dsnake(){
+    const renderSnake = getInterpolatedSnake();
     const start = hexToRgb(snakeHeadColor);
     const end = { r: start.r * 0.8, g: start.g * 0.8, b: start.b * 0.8 };
 
@@ -109,42 +123,32 @@ function dsnake(){
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
         if (snakeSkin === 'neon') { ctx.shadowColor = snakeHeadColor; ctx.shadowBlur = 14; }
+
         ctx.beginPath();
-        snake.forEach((p, i) => {
+        renderSnake.forEach((p, i) => {
             const px = p.x + size/2, py = p.y + size/2;
             if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
         });
         ctx.stroke();
+        if (snakeSkin === 'stripes') {
+            ctx.save();
+            ctx.strokeStyle = '#16181c';
+            ctx.lineWidth = size * 1;
+            ctx.lineCap = 'butt';
+            ctx.setLineDash([size*0.15, size*0.6]);
+            ctx.beginPath();
+            renderSnake.forEach((p, i) => {
+                const px = p.x + size/2, py = p.y + size/2;
+                if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+            });
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.restore();
+        }
         ctx.shadowBlur = 0;
         ctx.restore();
-
-        const tail = snake[snake.length - 1];
-        const prev = snake[snake.length - 2] || tail;
-        const ux = (tail.x - prev.x)/size, uy = (tail.y - prev.y)/size;
-        const px = -uy, py = ux;
-        const baseX = tail.x + size/2 - ux*size*0.46, baseY = tail.y + size/2 - uy*size*0.46;
-        ctx.fillStyle = snakeHeadColor;
-        ctx.beginPath();
-        ctx.moveTo(baseX + px*size*0.46, baseY + py*size*0.46);
-        ctx.lineTo(baseX - px*size*0.46, baseY - py*size*0.46);
-        ctx.lineTo(tail.x + size/2 + ux*size*0.46, tail.y + size/2 + uy*size*0.46);
-        ctx.closePath();
-        ctx.fill();
-
-        const head = snake[0];
-        const hx = x/size, hy = y/size;
-        const hpx = -hy, hpy = hx;
-        const hcx = head.x + size/2, hcy = head.y + size/2;
-        const tipx = hcx + hx*size*0.95, tipy = hcy + hy*size*0.95;
-        ctx.fillStyle = snakeHeadColor;
-        ctx.beginPath();
-        ctx.moveTo(hcx - hx*size*0.4 + hpx*size*0.55, hcy - hy*size*0.4 + hpy*size*0.55);
-        ctx.quadraticCurveTo(tipx, tipy, hcx - hx*size*0.4 - hpx*size*0.55, hcy - hy*size*0.4 - hpy*size*0.55);
-        ctx.closePath();
-        ctx.fill();
     }
-
-    snake.forEach((snakePart, i) => {
+    renderSnake.forEach((snakePart, i) => {
         let scale = 1;
         if (eatPulse >= 0){
             const offset = Math.round(eatPulse) - i;
@@ -152,7 +156,7 @@ function dsnake(){
             else if (offset === 1) scale = 1.3;
             else if (offset === 2) scale = 1.1;
         }
-        const s = size * scale;
+        const s = size * scale;     
         const cx = snakePart.x + size/2 - s/2;
         const cy = snakePart.y + size/2 - s/2;
         const t = Math.min(i / (snake.length - 1), 1);
@@ -218,11 +222,14 @@ function dsnake(){
         }
     });
 
-    if(!ate){ snake.pop(); }
-    ate = false;
     if (eatPulse >= 0){
-        eatPulse+=1.5;
+        const now = performance.now();
+        const dt = now - lastPulseTime;
+        lastPulseTime = now;
+        eatPulse+=1.5 * (dt/speed);
         if (eatPulse > snake.length + 2) eatPulse = -1;
+    } else {
+        lastPulseTime = performance.now();
     }
 }
 
@@ -231,11 +238,8 @@ function time(){
     if(running){
         setTimeout(()=>{
             if (myGen !== gameGen) return;
-            clearscreen();
-            food();
             movesnake();
-            dsnake();
-            gameover(); 
+            gameover();
             time();
         },speed)
     }
@@ -244,7 +248,19 @@ function time(){
     }
 };
 
+function renderLoop(myGen){
+    if (myGen !== gameGen) return;
+    if(running){
+        clearscreen();
+        food();
+        dsnake();
+        requestAnimationFrame(()=>renderLoop(myGen));
+    }
+}
+
 function movesnake(){
+    prevSnake = snake.map(p => ({x:p.x, y:p.y}));
+    lastMoveTime = performance.now()
     x = nextX; y = nextY;
     const head = {x: snake[0].x + x, y: snake[0].y + y};
     snake.unshift(head);
@@ -331,6 +347,8 @@ function movesnake(){
         ate = true;
         eatPulse = 0;
     }
+    if(!ate){ snake.pop(); }
+    ate = false;
 };
 
 function food(){
