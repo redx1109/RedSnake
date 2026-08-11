@@ -27,3 +27,26 @@ button:active, .gamecard:active { transform: scale(0.95); transition: transform 
 
 @keyframes boostPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,122,26,0.4);} 50% { box-shadow: 0 0 0 12px rgba(255,122,26,0);} }
 #s2BoostBtn:active { animation: boostPulse 0.5s ease; }
+
+#s2KillToast {
+    position: fixed;
+    bottom: 18%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.7);
+    color: #ece7de;
+    padding: 10px 22px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    opacity: 0;
+    z-index: 30;
+}
+
+#s2KillToast.show { animation: toastPop 1.8s ease; }
+@keyframes toastPop {
+    0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+    15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    80% { opacity: 1; }
+    100% { opacity: 0; }
+}
