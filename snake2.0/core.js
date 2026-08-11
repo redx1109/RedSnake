@@ -68,7 +68,7 @@ function s2Loop() {
         let angleDiff = desiredAngle - s2Angle;
         while (angleDiff > Math.PI) angleDiff -= Math.PI*2;
         while (angleDiff < -Math.PI) angleDiff += Math.PI*2;
-        const myTurnRate = Math.max(0.11, S2_MAX_TURN_RATE - (s2Snake.length * 0.0002))
+        const myTurnRate = Math.max(0.05, S2_MAX_TURN_RATE - (s2Snake.length * 0.0004));
         const clampedTurn = Math.max(-myTurnRate, Math.min(myTurnRate, angleDiff));
         s2Angle += clampedTurn;
         dx = Math.cos(s2Angle);
@@ -86,15 +86,20 @@ function s2Loop() {
     };
     s2Snake.unshift(newHead);
     s2Snake.pop();
+    const thicknessNow = Math.min(24 + s2Snake.length * 0.05, 60);
     if (s2CircleAmount > 0) {
+        const minGap = thicknessNow * 0.9;
         for (let i = 1; i < s2Snake.length; i++) {
-            const segT = i / s2Snake.length; // near head = weak pull, near tail = strong pull
+            const segT = i / s2Snake.length;
             const pull = 0.02 * s2CircleAmount * segT;
-            s2Snake[i].x += (newHead.x - s2Snake[i].x) * pull;
-            s2Snake[i].y += (newHead.y - s2Snake[i].y) * pull;
+            const nx = s2Snake[i].x + (newHead.x - s2Snake[i].x) * pull;
+            const ny = s2Snake[i].y + (newHead.y - s2Snake[i].y) * pull;
+            if (Math.hypot(newHead.x - nx, newHead.y - ny) > minGap) {
+                s2Snake[i].x = nx; s2Snake[i].y = ny;
+            }
         }
     }
-    const thicknessNow = Math.min(24 + s2Snake.length * 0.05, 60);
+
     if (s2CheckHeadCollision(newHead.x, newHead.y, thicknessNow, 'player')) {
         s2Running = false;
         document.exitPointerLock();
@@ -170,7 +175,10 @@ function s2Loop() {
         }
     }
     s2Bots.forEach(s2UpdateBot);
-    s2CheckEncirclement();
+    if (Math.floor(Date.now()/150) !== s2LastEncircleCheck) {
+        s2LastEncircleCheck = Math.floor(Date.now()/150);
+        s2CheckEncirclement();
+    }
     const aliveBotCount = s2Bots.filter(b => b.alive).length;
     document.querySelector('#s2ScoreNum').textContent = s2Snake.length;
     document.querySelector('#s2AliveNum').textContent = aliveBotCount + 1; // +1 for player
