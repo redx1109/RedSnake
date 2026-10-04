@@ -5,6 +5,7 @@ let lastMoveTime = performance.now();
 let lastPulseTime = performance.now();
 let shieldActive = false, shieldFruitActive = false, shieldCooldown = false;
 let shieldGraceUntil = 0, shieldFruitTimer = null, sfx = null, sfy = null;
+let rocks = [], rockFruitCount = 0;
 function resizeCanvas(){
     gameboard.width = gameboard.clientWidth;
     gameboard.height = gameboard.clientHeight;
@@ -21,6 +22,7 @@ function restartgame(){
     blueFruitActive = false;
     goldFruitActive = false;
     slowFruitCooldown = false;
+    rocks = []; rockFruitCount = 0;
     shieldActive = false; shieldFruitActive = false; shieldCooldown = false;
     shieldGraceUntil = 0; clearTimeout(shieldFruitTimer);
     comboCount = 0;
@@ -254,6 +256,7 @@ function renderLoop(myGen){
     if(running){
         clearscreen();
         food();
+        drawRocks();
         dsnake();
         drawShield();
         requestAnimationFrame(()=>renderLoop(myGen));
@@ -354,6 +357,7 @@ function movesnake(){
         }
         spawnfood();
         ate = true;
+        updateRocks();
         eatPulse = 0;
     }
     if(!ate){ snake.pop(); }
@@ -448,6 +452,7 @@ function spawnfood(){
 
     maybeSpawnBlueFruit();
     maybeSpawnShieldFruit();
+    clearRocksUnderFruit();
     clearTimeout(foodRespawnTimer);
     if (matchMode === 'score') {
         foodRespawnTimer = setTimeout(() => {
@@ -488,7 +493,8 @@ function gameover(){
     }
     const hitWall = h.x < 0 || h.x >= w || h.y < 0 || h.y >= ht;
     const hitSelf = snake.some((p, i) => i > 0 && p.x == h.x && p.y == h.y);
-    if (hitWall || hitSelf){
+    const hitRock = rocks.some(r => r.x === h.x && r.y === h.y);
+    if (hitWall || hitSelf || hitRock){
         if (shieldActive || Date.now() < shieldGraceUntil){
             if (shieldActive){ shieldActive = false; shieldGraceUntil = Date.now() + 1000; }
             if (hitWall){
@@ -502,6 +508,47 @@ function gameover(){
     }
     if (!running) reportMyDeath();
 };
+
+function updateRocks(){
+    if (!maxRocks || onlineMode) return;
+    if (++rockFruitCount < 5) return;
+    rockFruitCount = 0;
+    if (rocks.length >= maxRocks) rocks.shift(); // oldest rock disappears
+    const hd = snake[0];
+    let r, bad, tries = 0;
+    do {
+        r = { x: Math.round((Math.random()*(wscreen()-size))/size)*size,
+              y: Math.round((Math.random()*(hscreen()-size))/size)*size };
+        bad = snake.some(p => p.x === r.x && p.y === r.y)
+            || rocks.some(k => k.x === r.x && k.y === r.y)
+            || (r.x === fx && r.y === fy)
+            || (blueFruitActive && r.x === bfx && r.y === bfy)
+            || (goldFruitActive && r.x === gfx && r.y === gfy)
+            || (shieldFruitActive && r.x === sfx && r.y === sfy)
+            || (Math.abs(r.x - hd.x) <= size*3 && Math.abs(r.y - hd.y) <= size*3);
+    } while (bad && ++tries < 100);
+    if (!bad) rocks.push(r);
+}
+
+function clearRocksUnderFruit(){
+    rocks = rocks.filter(r =>
+        !(r.x === fx && r.y === fy) &&
+        !(blueFruitActive && r.x === bfx && r.y === bfy) &&
+        !(goldFruitActive && r.x === gfx && r.y === gfy) &&
+        !(shieldFruitActive && r.x === sfx && r.y === sfy));
+}
+
+function drawRocks(){
+    rocks.forEach(r => {
+        ctx.fillStyle = "#6b7280";
+        ctx.fillRect(r.x+1, r.y+1, size-2, size-2);
+        ctx.fillStyle = "#4b5563";
+        ctx.fillRect(r.x+size*0.15, r.y+size*0.55, size*0.7, size*0.3);
+        ctx.strokeStyle = "#9ca3af";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(r.x+1, r.y+1, size-2, size-2);
+    });
+}
 
 function dgameover(){
     gameboard.classList.add('shake');
