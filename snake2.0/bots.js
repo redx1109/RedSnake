@@ -1,22 +1,24 @@
 function s2CreateBot(id) {
-
-    const startX = Math.random() * WORLD_SIZE;
-    const startY = Math.random() * WORLD_SIZE;
-    const trail = [];
+    let startX, startY;
+    do {   // never spawn near the player or another bot
+        startX = 300 + Math.random() * (WORLD_SIZE - 600);
+        startY = 300 + Math.random() * (WORLD_SIZE - 600);
+    } while ((s2Snake.length && Math.hypot(startX - s2Snake[0].x, startY - s2Snake[0].y) < 900)
+          || s2Bots.some(b => b.alive && Math.hypot(startX - b.snake[0].x, startY - b.snake[0].y) < 350));
+    const angle = Math.random() * Math.PI * 2;
     const len = 15 + Math.floor(Math.random() * 60);
-    for (let i = 0; i < len; i++) {
-        trail.push({ x: startX - i*6, y: startY });
+    const trail = [];
+    for (let i = 0; i < len; i++) {   // body trails BEHIND the head
+        trail.push({ x: startX - Math.cos(angle) * i * 6, y: startY - Math.sin(angle) * i * 6 });
     }
     return {
         id,
         snake: trail,
-        angle: Math.random() * Math.PI * 2,
+        angle,
         speed: 2 + Math.random() * 0.8,
         color: ['#9AC606','#06C6C6','#C60676','#C6A006'][Math.floor(Math.random()*4)],
         alive: true,
         name: 'Bot' + id,
-        avoidCheckTimer: 0,
-        avoiding: false,
     };
 }
 
@@ -27,80 +29,108 @@ function s2InitBots() {
     }
 }
 
-function s2UpdateBot(bot) {
-    if (!bot.alive) return;
-    const head = bot.snake[0];
-    // find nearest food (normal or big), wider search radius
-    let nearestFood = null, nearestDist = 700;
-    s2Foods.forEach(f => {
-        const d = Math.hypot(head.x - f.x, head.y - f.y);
-        if (d < nearestDist) { nearestDist = d; nearestFood = f; }
-    });
-    s2BigFoods.forEach(f => {
-        const d = Math.hypot(head.x - f.x, head.y - f.y) - 200; // treat big food as if 200px closer (more attractive)
-        if (d < nearestDist) { nearestDist = d; nearestFood = f; }
-    });
-
-    let targetAngle = bot.angle;
-    if (nearestFood) {
-        targetAngle = Math.atan2(nearestFood.y - head.y, nearestFood.x - head.x);
-    } else {
-        // no food nearby — pick a fresh random direction occasionally, hold heading otherwise
-        if (!bot.wanderTimer || bot.wanderTimer <= 0) {
-            bot.wanderAngle = Math.random() * Math.PI * 2;
-            bot.wanderTimer = 60 + Math.random() * 60; // hold for 1-2 seconds at 60fps
-        }
-        bot.wanderTimer--;
-        targetAngle = bot.wanderAngle;
-    }
-
-    // basic obstacle avoidance: look ahead, steer away from nearby snake bodies
-    bot.avoidCheckTimer--;
-    if (bot.avoidCheckTimer <= 0) {
-        bot.avoidCheckTimer = 5; // only recheck every 5 frames
-        const lookAheadDist = 60;
-        const lookX = head.x + Math.cos(bot.angle) * lookAheadDist;
-        const lookY = head.y + Math.sin(bot.angle) * lookAheadDist;
-        let avoiding = false;
-
-        function checkDanger(segX, segY) {
-            return Math.hypot(lookX - segX, lookY - segY) < 30;
-        }
-
-        const lcx = Math.floor(lookX/S2_CELL), lcy = Math.floor(lookY/S2_CELL);
-        outer:
-        for (let gx = lcx-1; gx <= lcx+1; gx++) {
-            for (let gy = lcy-1; gy <= lcy+1; gy++) {
-                const cell = s2Grid.get(gx+','+gy);
-                if (!cell) continue;
-                for (const item of cell) {
-                    if (item.owner === bot.id) continue;
-                    if (checkDanger(item.x, item.y)) { avoiding = true; break outer; }
-                }
+function s2BotDanger(x, y, botId, r) {
+    const cx = Math.floor(x / S2_CELL), cy = Math.floor(y / S2_CELL);
+    for (let gx = cx - 1; gx <= cx + 1; gx++) {
+        for (let gy = cy - 1; gy <= cy + 1; gy++) {
+            const cell = s2Grid.get(gx + ',' + gy);
+            if (!cell) continue;
+            for (const it of cell) {
+                if (it.owner !== botId && Math.hypot(x - it.x, y - it.y) < r) return true;
             }
         }
-        bot.avoiding = avoiding;
     }
-    const avoiding = bot.avoiding;
+    return false;
+}
 
-    if (avoiding) {
-        targetAngle = bot.angle + Math.PI/2 + (Math.random() - 0.5);
+// false if the food sits inside the bot's turning circle (it would orbit it forever)
+function s2BotCanReach(bot, head, f, R) {
+    const c = Math.cos(bot.angle), s = Math.sin(bot.angle);
+    const rx = f.x - head.x, ry = f.y - head.y;
+    const fwd = rx * c + ry * s, lat = -rx * s + ry * c;
+    return Math.hypot(fwd, lat - R) > R * 0.85 && Math.hypot(fwd, lat + R) > R * 0.85;
+}
+
+function s2UpdateBot(bot) {
+    if (!bot.alive) return;
+    bot.age = (bot.age || 0) + 1;
+    const head = bot.snake[0];
+    const baseTurn = Math.max(0.025, 0.06 - bot.snake.length * 0.00005);
+    const R = bot.speed / baseTurn;                       // turning radius in px
+    const thick = Math.min(24 + bot.snake.length * 0.05, 60);
+    const tick = bot.age + bot.id;                        // staggers work between bots
+
+    // 1) food target: sticky, only reachable + safe food
+    if (bot.breakout > 0) bot.breakout--;
+    if (bot.target && !s2Foods.includes(bot.target) && !s2BigFoods.includes(bot.target)) bot.target = null;
+    if (bot.target && tick % 20 === 0) {
+        const t = bot.target;
+        if (!s2BotCanReach(bot, head, t, R) || s2BotDanger(t.x, t.y, bot.id, 60)) bot.target = null;
     }
-    // world edge avoidance (unchanged)
-    const margin = 200;
-    if (head.x < margin) targetAngle = 0;
-    if (head.x > WORLD_SIZE - margin) targetAngle = Math.PI;
-    if (head.y < margin) targetAngle = Math.PI/2;
-    if (head.y > WORLD_SIZE - margin) targetAngle = -Math.PI/2;
+    if (!bot.target && !(bot.breakout > 0) && tick % 5 === 0) {
+        let best = null, bestScore = 700;
+        const consider = (f, bonus) => {
+            if (f === bot.badTarget && bot.age < bot.badUntil) return;
+            if (f.x < 120 || f.y < 120 || f.x > WORLD_SIZE - 120 || f.y > WORLD_SIZE - 120) return;   // skip wall food
+            const cl = f.claim;   // someone else already going for it? pick another
+            if (cl !== undefined && cl !== bot.id && s2Bots[cl] && s2Bots[cl].alive && s2Bots[cl].target === f) return;
+            const score = Math.hypot(head.x - f.x, head.y - f.y) - bonus + Math.random() * 120;
+            if (score < bestScore && s2BotCanReach(bot, head, f, R) && !s2BotDanger(f.x, f.y, bot.id, 60)) { best = f; bestScore = score; }
+        };
+        s2Foods.forEach(f => consider(f, 0));
+        s2BigFoods.forEach(f => consider(f, 200));
+        bot.target = best;
+        if (best) best.claim = bot.id;
+    }
 
-// smooth turning — turn faster when close to target for tighter tracking
-    let diff = targetAngle - bot.angle;
-    while (diff > Math.PI) diff -= Math.PI*2;
-    while (diff < -Math.PI) diff += Math.PI*2;
-    const baseTurn = Math.max(0.05, S2_MAX_TURN_RATE - (bot.snake.length * 0.0004));
-    const maxTurn = avoiding ? baseTurn * 1.8 : baseTurn;
-    const clampedDiff = Math.max(-maxTurn, Math.min(maxTurn, diff));
-    bot.angle += clampedDiff;
+    // 2) where do we WANT to go
+    let desired;
+    if (bot.target) {
+        desired = Math.atan2(bot.target.y - head.y, bot.target.x - head.x);
+    } else {
+        if (!(bot.wanderTimer > 0)) {
+            bot.wanderAngle = bot.angle + (Math.random() - 0.5) * 1.5;
+            bot.wanderTimer = 40 + Math.random() * 60;
+        }
+        bot.wanderTimer--;
+        desired = bot.wanderAngle;
+    }
+
+    // 3) feelers: test headings around 'desired', take the safest one closest to it
+    if (bot.steerA === undefined || tick % 2 === 0) {
+        const look = [R * 0.8 + 20, R * 1.6 + 20, R * 2.6 + 20];
+        const safeR = thick / 2 + 16;
+        let bestA = desired, bestScore = -Infinity;
+        for (const off of [0, 0.35, -0.35, 0.7, -0.7, 1.1, -1.1, 1.6, -1.6, 2.2, -2.2, Math.PI]) {
+            const a = desired + off;
+            let danger = 0;
+            for (let i = 0; i < 3; i++) {
+                const px = head.x + Math.cos(a) * look[i], py = head.y + Math.sin(a) * look[i];
+                if (px < 40 || py < 40 || px > WORLD_SIZE - 40 || py > WORLD_SIZE - 40 || s2BotDanger(px, py, bot.id, safeR)) danger += 3 - i;
+            }
+            const turnCost = Math.abs(Math.atan2(Math.sin(a - bot.angle), Math.cos(a - bot.angle)));
+            const score = -danger * 10 - Math.abs(off) - turnCost * 0.3;
+            if (score > bestScore) { bestScore = score; bestA = a; }
+        }
+        bot.steerA = bestA;
+    }
+
+    // 4) turn (same limited rate as the player)
+    let diff = bot.steerA - bot.angle;
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+    const turn = Math.max(-baseTurn, Math.min(baseTurn, diff));
+    bot.angle += turn;
+
+    // 5) anti-circling: lots of one-way turning with no result = break out straight
+    bot.spin = (bot.spin || 0) * 0.998 + turn;
+    if (Math.abs(bot.spin) > 7) {
+        bot.spin = 0;
+        bot.badTarget = bot.target; bot.badUntil = bot.age + 600;
+        bot.target = null;
+        bot.breakout = 90;
+        bot.wanderAngle = bot.angle; bot.wanderTimer = 90;
+    }
 
     const newHead = {
         x: Math.max(0, Math.min(WORLD_SIZE, head.x + Math.cos(bot.angle)*bot.speed)),
@@ -116,7 +146,7 @@ function s2UpdateBot(bot) {
     // bot eats food too
     for (let i = s2Foods.length - 1; i >= 0; i--) {
         const f = s2Foods[i];
-        if (Math.hypot(newHead.x - f.x, newHead.y - f.y) < 12) {
+        if (Math.hypot(newHead.x - f.x, newHead.y - f.y) < thick / 2 + 6) {
             s2Foods.splice(i, 1);
             s2SpawnFood();
             const tail = bot.snake[bot.snake.length - 1];
@@ -125,7 +155,7 @@ function s2UpdateBot(bot) {
     }
     for (let i = s2BigFoods.length - 1; i >= 0; i--) {
         const f = s2BigFoods[i];
-        if (Math.hypot(newHead.x - f.x, newHead.y - f.y) < 14) {
+        if (Math.hypot(newHead.x - f.x, newHead.y - f.y) <  thick / 2 + 10) {
             s2BigFoods.splice(i, 1);
             s2SpawnBigFood();
             const tail = bot.snake[bot.snake.length - 1];
