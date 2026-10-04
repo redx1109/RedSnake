@@ -5,6 +5,7 @@ let myUsername = localStorage.getItem('rs_username') || '';
 let onlineMode = false;
 let soundOn = localStorage.getItem('rs_sound') !== 'false';
 let portalOn = localStorage.getItem('rs_portal') === 'true';
+let maxRocks = Number(localStorage.getItem('rs_rocks')) || 0; // 0 = off
 const eatSound = new Audio('food-eating.mp3'); // change to .wav if that's your file type
 let lastEatSoundTime = 0;
 let snakeSkin = localStorage.getItem('rs_skin') || 'classic';
