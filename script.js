@@ -24,8 +24,8 @@ let snakeHeadColor = localStorage.getItem('rs_color') || '#9AC606';
 
 gameboard.width = gameboard.clientWidth;
 gameboard.height = gameboard.clientHeight;
-function wscreen(){ return gameboard.width; }
-function hscreen(){ return gameboard.height; }
+function wscreen(){ return Math.floor(gameboard.width / size) * size; }
+function hscreen(){ return Math.floor(gameboard.height / size) * size; }
 const snakecolor = '#8fae7c';
 const snakebordercolor = '#16181c';
 const screenbackground = '#16181c';
