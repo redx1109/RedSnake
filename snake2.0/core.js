@@ -1,3 +1,15 @@
+function s2GameOver() {
+    s2Running = false;
+    clearInterval(s2HuntInterval);
+    clearInterval(s2ZoneShrinkInterval);
+    clearInterval(s2BoostDrainTimer);
+    s2Boosting = false;
+    document.exitPointerLock();
+    document.querySelector('#s2FinalLength').textContent = s2Snake.length;
+    document.querySelector('#s2FinalKills').textContent = s2PlayerKills;
+    document.querySelector('#s2GameoverPopup').classList.remove('hidden');
+}
+
 function s2SetupMode() {
     clearInterval(s2ZoneShrinkInterval);
     if (s2Mode === 'battleroyale') {
@@ -16,12 +28,7 @@ function s2SetupMode() {
             const el = document.querySelector('#s2TimeNum');
             if (el) el.textContent = s2HuntTimeLeft;
             if (s2HuntTimeLeft <= 0) {
-                clearInterval(s2HuntInterval);
-                s2Running = false;
-                document.exitPointerLock();
-                document.querySelector('#s2FinalLength').textContent = s2Snake.length;
-                document.querySelector('#s2FinalKills').textContent = s2PlayerKills;
-                document.querySelector('#s2GameoverPopup').classList.remove('hidden');
+                s2GameOver();
             }
         }, 1000);
     }
@@ -39,10 +46,14 @@ function initSnake2() {
         s2Snake.push({ x: WORLD_SIZE/2 - i*s2SegmentSpacing, y: WORLD_SIZE/2 });
     }
     s2Running = true;
+    s2Angle = 0; s2JoystickX = 0; s2JoystickY = 0; s2CircleAmount = 0; s2PlayerKills = 0; s2LastFrame = 0;
 
-    s2canvas.addEventListener('click', () => s2canvas.requestPointerLock());
-    document.addEventListener('mousemove', s2HandleMouse);
-    s2SetupJoystick();
+    if (!window.s2Bound) {
+        window.s2Bound = true;
+        s2canvas.addEventListener('click', () => s2canvas.requestPointerLock());
+        document.addEventListener('mousemove', s2HandleMouse);
+        s2SetupJoystick();
+    }
     requestAnimationFrame(s2Loop);
     s2InitFood();
     s2InitBigFood();
@@ -51,9 +62,14 @@ function initSnake2() {
         s2SetupBoostButton();
         s2SetupMode();
 }
-
-function s2Loop() {
+let s2Frames = 0;
+const s2Esc = s => String(s).replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';');
+let s2LastFrame = 0;
+function s2Loop(ts) {
     if (!s2Running) return;
+    const FRAME = 1000 / 60;
+    if (ts - s2LastFrame < FRAME - 2) { requestAnimationFrame(s2Loop); return; }
+    s2LastFrame = ts - ((ts - s2LastFrame) % FRAME);
     s2Grid.clear();
     function s2GridKey(x,y){ return (Math.floor(x/S2_CELL))+','+(Math.floor(y/S2_CELL)); }
     function s2GridAdd(x,y,owner){ const k=s2GridKey(x,y); if(!s2Grid.has(k)) s2Grid.set(k,[]); s2Grid.get(k).push({x,y,owner}); }
@@ -68,7 +84,7 @@ function s2Loop() {
         let angleDiff = desiredAngle - s2Angle;
         while (angleDiff > Math.PI) angleDiff -= Math.PI*2;
         while (angleDiff < -Math.PI) angleDiff += Math.PI*2;
-        const myTurnRate = Math.max(0.05, S2_MAX_TURN_RATE - (s2Snake.length * 0.0004));
+        const myTurnRate = Math.max(0.025, 0.06 - s2Snake.length * 0.00005);
         const clampedTurn = Math.max(-myTurnRate, Math.min(myTurnRate, angleDiff));
         s2Angle += clampedTurn;
         dx = Math.cos(s2Angle);
@@ -101,12 +117,8 @@ function s2Loop() {
     }
 
     if (s2CheckHeadCollision(newHead.x, newHead.y, thicknessNow, 'player')) {
-        s2Running = false;
-        document.exitPointerLock();
         s2DropFoodTrail(s2Snake, snakeHeadColor || '#9AC606');
-        document.querySelector('#s2FinalLength').textContent = s2Snake.length;
-        document.querySelector('#s2FinalKills').textContent = s2PlayerKills;
-        document.querySelector('#s2GameoverPopup').classList.remove('hidden');
+        s2GameOver();
         return;
     }
     // --- mode-specific death conditions ---
@@ -116,20 +128,12 @@ function s2Loop() {
             s2Snake.pop(); s2Snake.pop(); // shrink fast outside zone
         }
         if (s2Snake.length <= 5) {
-            s2Running = false;
-            document.exitPointerLock();
-            document.querySelector('#s2FinalLength').textContent = s2Snake.length;
-            document.querySelector('#s2FinalKills').textContent = s2PlayerKills;
-            document.querySelector('#s2GameoverPopup').classList.remove('hidden');
+            s2GameOver(); 
             return;
         }
     }
     if (s2Mode === 'timeattack' && Date.now() - s2LastKillTime > 60000) {
-        s2Running = false;
-        document.exitPointerLock();
-        document.querySelector('#s2FinalLength').textContent = s2Snake.length;
-        document.querySelector('#s2FinalKills').textContent = s2PlayerKills;
-        document.querySelector('#s2GameoverPopup').classList.remove('hidden');
+        s2GameOver(); 
         return;
     }
     s2CameraX = s2Snake[0].x - s2canvas.width/2;
@@ -151,7 +155,7 @@ function s2Loop() {
         }
     });
     // check food collision
-    const headR = 12; // half of thickness (24/2)
+    const headR = thicknessNow/2; // half of thickness (24/2)
     for (let i = s2Foods.length - 1; i >= 0; i--) {
         const f = s2Foods[i];
         const dist = Math.hypot(s2Snake[0].x - f.x, s2Snake[0].y - f.y);
@@ -166,7 +170,7 @@ function s2Loop() {
     }
     for (let i = s2BigFoods.length - 1; i >= 0; i--) {
         const f = s2BigFoods[i];
-        if (Math.hypot(s2Snake[0].x - f.x, s2Snake[0].y - f.y) < 20) {
+        if (Math.hypot(s2Snake[0].x - f.x, s2Snake[0].y - f.y) < headR + 10) {
             s2BigFoods.splice(i, 1);
             s2SpawnBigFood();
             const tail = s2Snake[s2Snake.length - 1];
@@ -175,19 +179,26 @@ function s2Loop() {
         }
     }
     s2Bots.forEach(s2UpdateBot);
+    if ((s2Mode === 'endless' || s2Mode === 'hunt') && Math.random() < 0.02) {
+        const dead = s2Bots.find(b => !b.alive);
+        if (dead) s2Bots[dead.id] = s2CreateBot(dead.id);
+    }
     if (Math.floor(Date.now()/150) !== s2LastEncircleCheck) {
         s2LastEncircleCheck = Math.floor(Date.now()/150);
         s2CheckEncirclement();
     }
     const aliveBotCount = s2Bots.filter(b => b.alive).length;
-    document.querySelector('#s2ScoreNum').textContent = s2Snake.length;
-    document.querySelector('#s2AliveNum').textContent = aliveBotCount + 1; // +1 for player
-    document.querySelector('#s2KillNum').textContent = s2PlayerKills;
-    const board = [{ name: myUsername || 'You', len: s2Snake.length, isPlayer: true }]
-    .concat(s2Bots.filter(b => b.alive).map(b => ({ name: b.name, len: b.snake.length })));
-    board.sort((a, b) => b.len - a.len);
-    document.querySelector('#s2Leaderboard').innerHTML = board.slice(0, 5)
-    .map((e, i) => `<div${e.isPlayer ? ' class="you"' : ''}>${i+1}. ${e.name} — ${e.len}</div>`).join('');
+    if ((s2Mode === 'battleroyale' || s2Mode === 'timeattack') && aliveBotCount === 0) { s2GameOver(); return; }
+        if (++s2Frames % 10 === 0) {
+        document.querySelector('#s2ScoreNum').textContent = s2Snake.length;
+        document.querySelector('#s2AliveNum').textContent = aliveBotCount + 1;
+        document.querySelector('#s2KillNum').textContent = s2PlayerKills;
+        const board = [{ name: myUsername || 'You', len: s2Snake.length, isPlayer: true }]
+            .concat(s2Bots.filter(b => b.alive).map(b => ({ name: b.name, len: b.snake.length })));
+        board.sort((a, b) => b.len - a.len);
+        document.querySelector('#s2Leaderboard').innerHTML = board.slice(0, 5)
+            .map((e, i) => `<div${e.isPlayer ? ' class="you"' : ''}>${i+1}. ${s2Esc(e.name)} — ${e.len}</div>`).join('');
+    }
     const orbitR = 8, orbitSpeed = 0.05;
     s2Foods.forEach(f => {
         f.orbitA += orbitSpeed;
@@ -242,3 +253,5 @@ document.querySelector('#s2HomeBtn').addEventListener('click', () => {
     document.querySelector('#snake2container').classList.add('hidden');
     document.querySelector('#homescreen').classList.remove('hidden');
 });
+
+window.addEventListener('resize', () => { if (!s2canvas) return; s2canvas.width = s2canvas.clientWidth; s2canvas.height = s2canvas.clientHeight; });
