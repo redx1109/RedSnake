@@ -4,6 +4,7 @@ document.querySelector('#settingsbtn').addEventListener('click', () => {
     document.querySelector('#settingsUsername').value = myUsername;
     document.querySelector('#soundToggle').checked = soundOn;
     document.querySelector('#portalToggle').checked = portalOn;
+    document.querySelector('#rockInput').value = maxRocks;
     document.querySelectorAll('.colorSwatch').forEach(el => {
         el.classList.toggle('selected', el.dataset.color === snakeHeadColor);
     });
@@ -34,6 +35,8 @@ document.querySelector('#saveSettingsBtn').addEventListener('click', () => {
     localStorage.setItem('rs_username', myUsername);
     portalOn = document.querySelector('#portalToggle').checked;
     localStorage.setItem('rs_portal', portalOn);
+    maxRocks = Math.max(0, Math.min(30, parseInt(document.querySelector('#rockInput').value) || 0));
+    localStorage.setItem('rs_rocks', maxRocks);
     localStorage.setItem('rs_sound', soundOn);
     localStorage.setItem('rs_color', snakeHeadColor);
     document.querySelector('#settingsscreen').classList.add('hidden');
