@@ -84,11 +84,11 @@ gameboard.addEventListener('touchmove', e => {
     const dy = e.touches[0].clientY - ty;
     if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) return;
     if (Math.abs(dx) > Math.abs(dy)){
-        if (dx > 0 &&  nextX!= -size){ nextX=size; nextY=0; }
-        else if (dx < 0 && nextX != size){ nextX=-size; nextY=0; }
+        if (dx > 0 && x != -size){ nextX=size; nextY=0; }
+        else if (dx < 0 && x != size){ nextX=-size; nextY=0; }
     } else {
-        if (dy > 0 && nextY != -size){ nextX=0; nextY=size; }
-        else if (dy < 0 && nextY!= size){ nextX=0; nextY=-size; }
+        if (dy > 0 && y != -size){ nextX=0; nextY=size; }
+        else if (dy < 0 && y != size){ nextX=0; nextY=-size; }
     }
     tx = e.touches[0].clientX;
     ty = e.touches[0].clientY;
