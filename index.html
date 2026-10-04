@@ -143,6 +143,7 @@
             <span class="skinSwatch" data-skin="neon">Neon</span>
         </div>
         <label><input type="checkbox" id="soundToggle"> Sound</label>
+        <label><input type="checkbox" id="musicToggle"> 🎵 Music</label>
         <label><input type="checkbox" id="portalToggle"> 🌀 Portal walls</label>
         <label>🧱 Max rocks (0 = off) <input type="number" id="rockInput" min="0" max="30" value="0" inputmode="numeric" style="width:70px"></label>
         <button id="saveSettingsBtn">Save</button>
@@ -187,10 +188,12 @@
     <script src="snake2.0/input.js"></script>
     <script src="snake2.0/render.js"></script>
     <script src="snake2.0/core.js"></script>
+    <script src="music.js"></script>
+    <script src="bgfx.js"></script>
     <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js');
-  }
-</script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js');
+    }
+    </script>
 </body>
 </html>
