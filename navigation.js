@@ -86,8 +86,8 @@ document.querySelector('#onlinebtn').addEventListener('click', () => {
 });
 
 const modes = [
-    { key: 'rounds', title: '3 Rounds', desc: 'Best of 3 — first to die loses each round.' },
     { key: 'survival', title: 'Survival', desc: 'One life, no rounds — last one standing wins.' },
+    { key: 'rounds', title: '3 Rounds', desc: 'Best of 3 — first to die loses each round.' },
     { key: 'timetrouble', title: 'Time Trouble', desc: '60 seconds on the clock — highest score wins.' },
     { key: 'score', title: 'First to 10', desc: 'Race to 10 points — no time limit.' }
 ];
