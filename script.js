@@ -4,6 +4,7 @@ const scoretext = document.querySelector('#scoree');
 let myUsername = localStorage.getItem('rs_username') || '';
 let onlineMode = false;
 let soundOn = localStorage.getItem('rs_sound') !== 'false';
+let portalOn = localStorage.getItem('rs_portal') === 'true';
 const eatSound = new Audio('food-eating.mp3'); // change to .wav if that's your file type
 let lastEatSoundTime = 0;
 let snakeSkin = localStorage.getItem('rs_skin') || 'classic';
@@ -31,7 +32,7 @@ const foodcolor = '#FA3604';
 const size = Math.max(15, Math.round(Math.min(gameboard.clientWidth, gameboard.clientHeight) / 20 / 10) * 10);
 let ate = false;
 let scoreModeStartTime = 0;
-function getHighKey(mode) { return 'rs_high_' + mode; }
+function getHighKey(mode) { return 'rs_high_' + mode + (portalOn ? '_portal' : ''); }
 function getHighScore(mode) {
     return Number(localStorage.getItem(getHighKey(mode))) || 0;
 }
