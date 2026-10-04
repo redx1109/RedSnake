@@ -3,6 +3,7 @@ document.querySelector('#settingsbtn').addEventListener('click', () => {
     document.querySelector('#settingsscreen').classList.remove('hidden');
     document.querySelector('#settingsUsername').value = myUsername;
     document.querySelector('#soundToggle').checked = soundOn;
+    document.querySelector('#musicToggle').checked = musicOn;
     document.querySelector('#portalToggle').checked = portalOn;
     document.querySelector('#rockInput').value = maxRocks;
     document.querySelectorAll('.colorSwatch').forEach(el => {
@@ -34,7 +35,11 @@ document.querySelector('#saveSettingsBtn').addEventListener('click', () => {
     soundOn = document.querySelector('#soundToggle').checked;
     localStorage.setItem('rs_username', myUsername);
     portalOn = document.querySelector('#portalToggle').checked;
+    
     localStorage.setItem('rs_portal', portalOn);
+    const mOn = document.querySelector('#musicToggle').checked;
+    localStorage.setItem('rs_music', mOn);
+    setMusic(mOn);
     maxRocks = Math.max(0, Math.min(30, parseInt(document.querySelector('#rockInput').value) || 0));
     localStorage.setItem('rs_rocks', maxRocks);
     localStorage.setItem('rs_sound', soundOn);
