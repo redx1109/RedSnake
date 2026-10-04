@@ -1,11 +1,10 @@
-
 window.addEventListener("keydown", changedirection);
-
 window.addEventListener('resize', resizeCanvas);
 let prevSnake = [];
 let lastMoveTime = performance.now();
 let lastPulseTime = performance.now();
-
+let shieldActive = false, shieldFruitActive = false, shieldCooldown = false;
+let shieldGraceUntil = 0, shieldFruitTimer = null, sfx = null, sfy = null;
 function resizeCanvas(){
     gameboard.width = gameboard.clientWidth;
     gameboard.height = gameboard.clientHeight;
@@ -22,6 +21,8 @@ function restartgame(){
     blueFruitActive = false;
     goldFruitActive = false;
     slowFruitCooldown = false;
+    shieldActive = false; shieldFruitActive = false; shieldCooldown = false;
+    shieldGraceUntil = 0; clearTimeout(shieldFruitTimer);
     comboCount = 0;
     clearTimeout(comboTimer);
     clearInterval(window.comboCountdownInterval);
@@ -254,6 +255,7 @@ function renderLoop(myGen){
         clearscreen();
         food();
         dsnake();
+        drawShield();
         requestAnimationFrame(()=>renderLoop(myGen));
     }
 }
@@ -277,6 +279,13 @@ function movesnake(){
             speed += 60;
             slowRevertTimer = setTimeout(() => { speed = oldSpeed; slowActive = false; }, 10000);
         }
+    }
+    if (shieldFruitActive && head.x === sfx && head.y === sfy) {
+        playEatSound();
+        clearTimeout(shieldFruitTimer);
+        shieldFruitActive = false; sfx = null; sfy = null;
+        shieldActive = true;
+        eatPulse = 0;
     }
     if (goldFruitActive && head.x === gfx && head.y === gfy) {
         playEatSound();
@@ -360,6 +369,7 @@ function food(){
     if (goldFruitActive && gfx !== null) {
         drawFruit(gfx, gfy, "#FFE55C", "#FFC107");
     }
+    if (shieldFruitActive && sfx !== null) drawFruit(sfx, sfy, "#C79BFF", "#8A3FFC");
 };
 
 function spawnGoldFruit(){
@@ -394,7 +404,36 @@ function drawFruit(px, py, c1, c2){
     ctx.arc(px + size/2, py + size/2, size/2, 0, Math.PI * 2);
     ctx.fill();
 }
+function maybeSpawnShieldFruit(){
+    if (onlineMode || shieldActive || shieldFruitActive || shieldCooldown) return;
+    if (Math.random() > 0.5) return; // 0.5 for testing, set 0.1 later
+    let bad;
+    do {
+        sfx = Math.round((Math.random()*(wscreen()-size))/size)*size;
+        sfy = Math.round((Math.random()*(hscreen()-size))/size)*size;
+        bad = snake.some(p => p.x === sfx && p.y === sfy)
+            || (sfx === fx && sfy === fy)
+            || (blueFruitActive && sfx === bfx && sfy === bfy);
+    } while (bad);
+    shieldFruitActive = true;
+    shieldCooldown = true;
+    shieldFruitTimer = setTimeout(() => { shieldFruitActive = false; sfx = null; sfy = null; }, 6000);
+    setTimeout(() => { shieldCooldown = false; }, 25000);
+}
 
+function drawShield(){
+    if (!shieldActive && Date.now() >= shieldGraceUntil) return;
+    const hd = getInterpolatedSnake()[0];
+    ctx.save();
+    ctx.strokeStyle = shieldActive ? "#B07CFF" : "#ffffff";
+    ctx.lineWidth = 3;
+    ctx.shadowColor = "#B07CFF";
+    ctx.shadowBlur = 12;
+    ctx.beginPath();
+    ctx.arc(hd.x + size/2, hd.y + size/2, size * 0.85 * (1 + Math.sin(Date.now()/120) * 0.12), 0, Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+}
 function spawnfood(){
     function random(min,max){
         const rn = Math.round((Math.random()*(max-min)+min)/size)*size;
@@ -408,7 +447,7 @@ function spawnfood(){
     } while (onSnake);
 
     maybeSpawnBlueFruit();
-
+    maybeSpawnShieldFruit();
     clearTimeout(foodRespawnTimer);
     if (matchMode === 'score') {
         foodRespawnTimer = setTimeout(() => {
@@ -441,24 +480,19 @@ function maybeSpawnBlueFruit(){
 }
 
 function gameover(){
-    switch(true){
-        case(snake[0].x < 0):
+    const h = snake[0], w = wscreen(), ht = hscreen();
+    const hitWall = h.x < 0 || h.x >= w || h.y < 0 || h.y >= ht;
+    const hitSelf = snake.some((p, i) => i > 0 && p.x == h.x && p.y == h.y);
+    if (hitWall || hitSelf){
+        if (shieldActive || Date.now() < shieldGraceUntil){
+            if (shieldActive){ shieldActive = false; shieldGraceUntil = Date.now() + 1000; }
+            if (hitWall){
+                if (h.x < 0) h.x = Math.floor((w-1)/size)*size; else if (h.x >= w) h.x = 0;
+                if (h.y < 0) h.y = Math.floor((ht-1)/size)*size; else if (h.y >= ht) h.y = 0;
+                prevSnake[0] = {x: h.x - x, y: h.y - y};
+            }
+        } else {
             running = false;
-            break;
-        case(snake[0].x >= wscreen()):
-            running = false;
-            break;
-        case(snake[0].y < 0):
-            running = false;
-            break;
-        case(snake[0].y >= hscreen()):
-            running = false;
-            break;
-    }
-    for(let i = 1; i < snake.length; i+=1){
-        if (snake[i].x == snake[0].x && snake[i].y == snake[0].y){
-            running = false;
-            break;
         }
     }
     if (!running) reportMyDeath();
