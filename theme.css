@@ -63,3 +63,6 @@ button:active, .gamecard:active { transform: scale(0.95); transition: transform 
     z-index: 15;
 }
 #s2Leaderboard .you { color: #9AC606; font-weight: bold; }
+#homescreen, #gameselect, #modeselect, #settingsscreen, #s2modeselect {
+    background-color: transparent;
+}
