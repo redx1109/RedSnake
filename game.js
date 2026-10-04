@@ -254,11 +254,20 @@ function time(){
 function renderLoop(myGen){
     if (myGen !== gameGen) return;
     if(running){
+        ctx.fillStyle = screenbackground;
+        ctx.fillRect(0, 0, gameboard.width, gameboard.height);
+        ctx.save();
+        ctx.translate(Math.floor((gameboard.width - wscreen()) / 2),
+                      Math.floor((gameboard.height - hscreen()) / 2));
         clearscreen();
+        ctx.strokeStyle = "rgba(201,148,79,0.35)";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(0, 0, wscreen(), hscreen());
         food();
         drawRocks();
         dsnake();
         drawShield();
+        ctx.restore();
         requestAnimationFrame(()=>renderLoop(myGen));
     }
 }
