@@ -257,7 +257,7 @@ body::after {
     transition: transform 0.15s ease;
 }
 
-#classiccard:hover, #snake2card :hover{
+#classiccard:hover, #snake2card:hover{
     border: solid #c9944f;
     color: #c9944f;
 }
