@@ -68,12 +68,16 @@ document.addEventListener('pointerlockchange', () => {
 });
 
 function s2HandleKeydown(e) {
-    const key = e.key.toLowerCase();
-    if (['arrowleft','a'].includes(key)) { s2UsingKeyboard = true; s2TargetAngle = Math.PI; }
-    else if (['arrowright','d'].includes(key)) { s2UsingKeyboard = true; s2TargetAngle = 0; }
-    else if (['arrowup','w'].includes(key)) { s2UsingKeyboard = true; s2TargetAngle = -Math.PI/2; }
-    else if (['arrowdown','s'].includes(key)) { s2UsingKeyboard = true; s2TargetAngle = Math.PI/2; }
+    if (!s2Running) return;
+    const k = e.key.toLowerCase(), R = 150;
+    if (['arrowleft','a'].includes(k))       { s2JoystickX = -R; s2JoystickY = 0; }
+    else if (['arrowright','d'].includes(k)) { s2JoystickX = R;  s2JoystickY = 0; }
+    else if (['arrowup','w'].includes(k))    { s2JoystickX = 0;  s2JoystickY = -R; }
+    else if (['arrowdown','s'].includes(k))  { s2JoystickX = 0;  s2JoystickY = R; }
+    else return;
+    e.preventDefault();
 }
+window.addEventListener('keydown', s2HandleKeydown);
 
 function s2SetupJoystick() {
     const container = document.querySelector('#snake2container');
