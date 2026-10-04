@@ -1,4 +1,5 @@
 function s2SpawnBigFood() {
+    if (s2Mode === 'hunt') return;
     let x, y, tooClose;
     do {
         x = Math.random() * WORLD_SIZE;
@@ -15,6 +16,7 @@ function s2InitBigFood() {
 }
 
 function s2SpawnFood() {
+    if (s2Mode === 'hunt') return;
     let x, y, tooClose;
     do {
         x = Math.random() * WORLD_SIZE;
