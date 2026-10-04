@@ -406,7 +406,7 @@ function drawFruit(px, py, c1, c2){
 }
 function maybeSpawnShieldFruit(){
     if (onlineMode || shieldActive || shieldFruitActive || shieldCooldown) return;
-    if (Math.random() > 0.5) return; // 0.5 for testing, set 0.1 later
+    if (Math.random() > 0.3) return; // 0.5 for testing, set 0.1 later
     let bad;
     do {
         sfx = Math.round((Math.random()*(wscreen()-size))/size)*size;
@@ -481,6 +481,11 @@ function maybeSpawnBlueFruit(){
 
 function gameover(){
     const h = snake[0], w = wscreen(), ht = hscreen();
+    if (portalOn && !onlineMode){
+        if (h.x < 0) h.x = Math.floor((w-1)/size)*size; else if (h.x >= w) h.x = 0;
+        if (h.y < 0) h.y = Math.floor((ht-1)/size)*size; else if (h.y >= ht) h.y = 0;
+        prevSnake[0] = {x: h.x - x, y: h.y - y};
+    }
     const hitWall = h.x < 0 || h.x >= w || h.y < 0 || h.y >= ht;
     const hitSelf = snake.some((p, i) => i > 0 && p.x == h.x && p.y == h.y);
     if (hitWall || hitSelf){
