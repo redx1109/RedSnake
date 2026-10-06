@@ -1,5 +1,5 @@
 function s2SpawnBigFood() {
-    if (s2Mode === 'hunt') return;
+    if (s2Mode === 'hunt' || s2BigFoods.length >= S2_BIG_FOOD_COUNT) return;
     let x, y, tooClose;
     do {
         x = Math.random() * WORLD_SIZE;
@@ -16,7 +16,7 @@ function s2InitBigFood() {
 }
 
 function s2SpawnFood() {
-    if (s2Mode === 'hunt') return;
+    if (s2Mode === 'hunt' || s2Foods.length >= S2_FOOD_COUNT) return;
     let x, y, tooClose;
     do {
         x = Math.random() * WORLD_SIZE;
@@ -33,18 +33,11 @@ function s2InitFood() {
 }
 
 function s2DropFoodTrail(snakeArr) {
-    const toRemove = Math.floor(snakeArr.length / 4);
-    for (let i = 0; i < toRemove && s2Foods.length > 0; i++) s2Foods.shift();
     const bigChance = Math.min(0.02 + (snakeArr.length / 600), 0.25);
     for (let i = 0; i < snakeArr.length; i += 4) {
-        const isBig = Math.random() < bigChance;
-        if (isBig) {
-            if (s2Foods.length + s2BigFoods.length >= S2_MAX_FOOD && s2Foods.length > 0) {
-                s2Foods.shift(); // evict oldest normal food to make room
-            }
-            if (s2Foods.length + s2BigFoods.length < S2_MAX_FOOD) s2BigFoods.push({ x: snakeArr[i].x, y: snakeArr[i].y, color: `hsl(${Math.floor(Math.random()*360)},90%,60%)`, ox: snakeArr[i].x, oy: snakeArr[i].y, orbitA: Math.random()*Math.PI*2 });
-        } else {
-            if (s2Foods.length + s2BigFoods.length < S2_MAX_FOOD) s2Foods.push({ x: snakeArr[i].x, y: snakeArr[i].y, color: `hsl(${Math.floor(Math.random()*360)},90%,60%)`, ox: snakeArr[i].x, oy: snakeArr[i].y, orbitA: Math.random()*Math.PI*2 });
-        }
+        if (s2Foods.length + s2BigFoods.length >= S2_MAX_FOOD) break;
+        const p = snakeArr[i];
+        const food = { x: p.x, y: p.y, color: `hsl(${Math.floor(Math.random()*360)},90%,60%)`, ox: p.x, oy: p.y, orbitA: Math.random()*Math.PI*2 };
+        (Math.random() < bigChance ? s2BigFoods : s2Foods).push(food);
     }
 }
