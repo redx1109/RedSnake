@@ -33,7 +33,7 @@ function s2BotDanger(x, y, botId, r) {
     const cx = Math.floor(x / S2_CELL), cy = Math.floor(y / S2_CELL);
     for (let gx = cx - 1; gx <= cx + 1; gx++) {
         for (let gy = cy - 1; gy <= cy + 1; gy++) {
-            const cell = s2Grid.get(gx + ',' + gy);
+            const cell = s2Grid.get(gx * 1000 + gy);
             if (!cell) continue;
             for (const it of cell) {
                 if (it.owner !== botId && Math.hypot(x - it.x, y - it.y) < r) return true;
@@ -49,6 +49,16 @@ function s2BotCanReach(bot, head, f, R) {
     const rx = f.x - head.x, ry = f.y - head.y;
     const fwd = rx * c + ry * s, lat = -rx * s + ry * c;
     return Math.hypot(fwd, lat - R) > R * 0.85 && Math.hypot(fwd, lat + R) > R * 0.85;
+}
+
+function s2CoastBot(bot) {
+    const h = bot.snake[0];
+    if (h.x < 150 || h.y < 150 || h.x > WORLD_SIZE - 150 || h.y > WORLD_SIZE - 150)
+        bot.angle = Math.atan2(WORLD_SIZE/2 - h.y, WORLD_SIZE/2 - h.x);   // turn back inward
+    else if (Math.random() < 0.02) bot.angle += (Math.random() - 0.5);
+    bot.steerA = bot.angle;
+    bot.snake.unshift({ x: h.x + Math.cos(bot.angle) * bot.speed, y: h.y + Math.sin(bot.angle) * bot.speed });
+    bot.snake.pop();
 }
 
 function s2UpdateBot(bot) {
@@ -97,7 +107,7 @@ function s2UpdateBot(bot) {
     }
 
     // 3) feelers: test headings around 'desired', take the safest one closest to it
-    if (bot.steerA === undefined || tick % 2 === 0) {
+    if (tick % 3 === 0) for (let i = s2Foods.length - 1; i >= 0; i--) {
         const look = [R * 0.8 + 20, R * 1.6 + 20, R * 2.6 + 20];
         const safeR = thick / 2 + 16;
         let bestA = desired, bestScore = -Infinity;
@@ -139,9 +149,7 @@ function s2UpdateBot(bot) {
     bot.snake.unshift(newHead);
     bot.snake.pop();
 
-    const k = Math.floor(newHead.x/S2_CELL)+','+Math.floor(newHead.y/S2_CELL);
-    if (!s2Grid.has(k)) s2Grid.set(k, []);
-    s2Grid.get(k).push({x: newHead.x, y: newHead.y, owner: bot.id});
+    s2GridAdd(newHead.x, newHead.y, bot.id);
 
     // bot eats food too
     for (let i = s2Foods.length - 1; i >= 0; i--) {
@@ -169,7 +177,7 @@ function s2UpdateBot(bot) {
     outerK:
     for (let gx = kcx-1; gx <= kcx+1; gx++) {
         for (let gy = kcy-1; gy <= kcy+1; gy++) {
-            const cell = s2Grid.get(gx+','+gy);
+            const cell = s2Grid.get(gx*1000+gy);
             if (!cell) continue;
             for (const item of cell) {
                 if (item.owner !== 'player') continue;
@@ -192,9 +200,7 @@ function s2CheckEncirclement() {
         if (bot.trapped) {
             s2DropFoodTrail(bot.snake, bot.color);
             bot.alive = false;
-            s2PlayerKills++;
-            s2LastKillTime = Date.now();
-            s2ShowKillToast(bot.name, true);
+            if (bot.ringHasPlayer) { s2PlayerKills++; s2LastKillTime = Date.now(); s2ShowKillToast(bot.name, true); }
         }
     });
 }
@@ -215,16 +221,18 @@ function s2IsBotEncircled(bot) {
     const radius = 150;
     const bins = 12;
     const covered = new Array(bins).fill(false);
+    bot.ringHasPlayer = false;
     const cx = Math.floor(head.x/S2_CELL), cy = Math.floor(head.y/S2_CELL);
     const span = Math.ceil(radius/S2_CELL);
     for (let gx = cx-span; gx <= cx+span; gx++) {
         for (let gy = cy-span; gy <= cy+span; gy++) {
-            const cell = s2Grid.get(gx+','+gy);
+            const cell = s2Grid.get(gx*1000+gy);
             if (!cell) continue;
             for (const item of cell) {
                 if (item.owner === bot.id) continue; 
                 const dx = item.x - head.x, dy = item.y - head.y;
                 if (Math.hypot(dx, dy) < radius) {
+                    if (item.owner === 'player') bot.ringHasPlayer = true;
                     const bin = Math.floor(((Math.atan2(dy, dx) + Math.PI) / (2*Math.PI)) * bins) % bins;
                     covered[bin] = true;
                 }
