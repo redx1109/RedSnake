@@ -65,17 +65,27 @@ function initSnake2() {
 let s2Frames = 0;
 const s2Esc = s => String(s).replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';');
 let s2LastFrame = 0;
+const s2Pool = []; let s2PoolN = 0;
+function s2GridAdd(x, y, owner) {
+    const k = Math.floor(x / S2_CELL) * 1000 + Math.floor(y / S2_CELL);
+    let cell = s2Grid.get(k);
+    if (!cell) { cell = []; s2Grid.set(k, cell); }
+    let it = s2Pool[s2PoolN];
+    if (!it) it = s2Pool[s2PoolN] = { x: 0, y: 0, owner: null };
+    s2PoolN++;
+    it.x = x; it.y = y; it.owner = owner;
+    cell.push(it);
+}
 function s2Loop(ts) {
     if (!s2Running) return;
     const FRAME = 1000 / 60;
     if (ts - s2LastFrame < FRAME - 2) { requestAnimationFrame(s2Loop); return; }
     s2LastFrame = ts - ((ts - s2LastFrame) % FRAME);
-    s2Grid.clear();
-    function s2GridKey(x,y){ return (Math.floor(x/S2_CELL))+','+(Math.floor(y/S2_CELL)); }
-    function s2GridAdd(x,y,owner){ const k=s2GridKey(x,y); if(!s2Grid.has(k)) s2Grid.set(k,[]); s2Grid.get(k).push({x,y,owner}); }
+    for (const c of s2Grid.values()) c.length = 0;
+    s2PoolN = 0;
     const pStep = Math.max(2, Math.floor(s2Snake.length/150));
     s2Snake.forEach((seg,i)=>{ if(i>=15 && i%pStep===0) s2GridAdd(seg.x, seg.y, 'player'); });
-    s2Bots.forEach(b=>{ if(!b.alive) return; const bStep = Math.max(3, Math.floor(b.snake.length/150)); b.snake.forEach((seg,i)=>{ if(i%bStep===0) s2GridAdd(seg.x, seg.y, b.id); }); });
+    s2Bots.forEach(b=>{ if(!b.alive) return; if (Math.hypot(b.snake[0].x - s2Snake[0].x, b.snake[0].y - s2Snake[0].y) > S2_ACTIVE) return; const bStep = Math.max(3, Math.floor(b.snake.length/150)); b.snake.forEach((seg,i)=>{ if(i%bStep===0) s2GridAdd(seg.x, seg.y, b.id); }); });
     const head = s2Snake[0];
     const distJ = Math.hypot(s2JoystickX, s2JoystickY);
     let dx, dy;
@@ -178,7 +188,11 @@ function s2Loop(ts) {
             playEatSound();
         }
     }
-    s2Bots.forEach(s2UpdateBot);
+    s2Bots.forEach(b => {
+        if (!b.alive) return;
+        if (Math.hypot(b.snake[0].x - head.x, b.snake[0].y - head.y) > S2_ACTIVE) s2CoastBot(b);
+        else s2UpdateBot(b);
+    });
     if ((s2Mode === 'endless' || s2Mode === 'hunt') && Math.random() < 0.02) {
         const dead = s2Bots.find(b => !b.alive);
         if (dead) s2Bots[dead.id] = s2CreateBot(dead.id);
@@ -231,7 +245,7 @@ function s2CheckHeadCollision(headX, headY, headThickness, excludeSelf) {
     const cx = Math.floor(headX/S2_CELL), cy = Math.floor(headY/S2_CELL);
         for (let gx = cx-1; gx <= cx+1; gx++) {
             for (let gy = cy-1; gy <= cy+1; gy++) {
-                const cell = s2Grid.get(gx+','+gy);
+                const cell = s2Grid.get(gx*1000+gy);
                 if (!cell) continue;
                 for (const item of cell) {
                     if (item.owner === excludeSelf) continue;
