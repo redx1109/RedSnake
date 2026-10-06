@@ -1,38 +1,43 @@
+const s2SpriteCache = new Map();
+const S2_MARGIN = 100; // extra area outside the screen
+function s2FoodSprite(color, r, blur) {
+    const key = color + r;
+    let c = s2SpriteCache.get(key);
+    if (c) return c;
+    const size = (r + 16) * 2;
+    c = document.createElement('canvas');
+    c.width = c.height = size;
+    const g = c.getContext('2d');
+    g.shadowColor = color; g.shadowBlur = blur;
+    g.fillStyle = color;
+    g.beginPath(); g.arc(size / 2, size / 2, r, 0, Math.PI * 2); g.fill();
+    s2SpriteCache.set(key, c);
+    return c;
+}
+
 function s2Draw() {
     s2ctx.fillStyle = '#16181c';
     s2ctx.fillRect(0, 0, s2canvas.width, s2canvas.height);
+    drawGridLines(s2ctx, s2canvas.width, s2canvas.height, 40, -s2CameraX, -s2CameraY);
+    s2ctx.save();
+    s2ctx.translate(s2canvas.width/2, s2canvas.height/2);
+    s2ctx.scale(s2Zoom, s2Zoom);
+    s2ctx.translate(-s2canvas.width/2, -s2canvas.height/2);
 
     const thickness = Math.min(24 + s2Snake.length * 0.05, 60); // grows with length, caps at 60
     const start = hexToRgb(snakeHeadColor || '#9AC606');
 
     s2Foods.forEach(f => {
-        const sx = f.x - s2CameraX;
-        const sy = f.y - s2CameraY;
-        if (sx < -20 || sx > s2canvas.width+20 || sy < -20 || sy > s2canvas.height+20) return; // skip off-screen
-        const grad = s2ctx.createRadialGradient(sx+2, sy+2, 1, sx, sy, 6);
-        grad.addColorStop(0, f.color);
-        grad.addColorStop(1, f.color);
-        s2ctx.fillStyle = grad;
-        s2ctx.shadowColor = f.color;
-        s2ctx.shadowBlur = 14;
-        s2ctx.beginPath();
-        s2ctx.arc(sx, sy, 6, 0, Math.PI*2);
-        s2ctx.fill();
-        s2ctx.shadowBlur = 0; 
+        const sx = f.x - s2CameraX, sy = f.y - s2CameraY;
+        if (sx < -S2_MARGIN || sx > s2canvas.width+S2_MARGIN || sy < -S2_MARGIN || sy > s2canvas.height+S2_MARGIN) return;
+        const sp = s2FoodSprite(f.color, 6, 14);
+        s2ctx.drawImage(sp, sx - sp.width / 2, sy - sp.height / 2);
     });
     s2BigFoods.forEach(f => {
         const sx = f.x - s2CameraX, sy = f.y - s2CameraY;
-        if (sx < -20 || sx > s2canvas.width+20 || sy < -20 || sy > s2canvas.height+20) return;
-        const grad = s2ctx.createRadialGradient(sx+2, sy+2, 1, sx, sy, 10);
-        grad.addColorStop(0, f.color);
-        grad.addColorStop(1, f.color);
-        s2ctx.fillStyle = grad;
-        s2ctx.shadowColor = f.color;
-        s2ctx.shadowBlur = 10;
-        s2ctx.beginPath();
-        s2ctx.arc(sx, sy, 10, 0, Math.PI*2);
-        s2ctx.fill();
-        s2ctx.shadowBlur = 0; 
+        if (sx < -S2_MARGIN || sx > s2canvas.width+S2_MARGIN || sy < -S2_MARGIN || sy > s2canvas.height+S2_MARGIN) return;
+        const sp = s2FoodSprite(f.color, 10, 10);
+        s2ctx.drawImage(sp, sx - sp.width / 2, sy - sp.height / 2);
     });
     s2Bots.forEach(bot => {
         if (!bot.alive) return;
@@ -41,9 +46,12 @@ function s2Draw() {
         s2ctx.save();
         s2ctx.lineJoin = 'round';
         s2ctx.lineCap = 'round';
-        const botHeadOnScreen = (bot.snake[0].x - s2CameraX > -100 && bot.snake[0].x - s2CameraX < s2canvas.width+100 &&
-                                bot.snake[0].y - s2CameraY > -100 && bot.snake[0].y - s2CameraY < s2canvas.height+100);
-        if (!botHeadOnScreen) { s2ctx.restore(); return; }
+        let botVisible = false;
+        for (let i = 0; i < bot.snake.length; i += 4) {
+            const vx = bot.snake[i].x - s2CameraX, vy = bot.snake[i].y - s2CameraY;
+            if (vx > -S2_MARGIN && vx < s2canvas.width + S2_MARGIN && vy > -S2_MARGIN && vy < s2canvas.height + S2_MARGIN) { botVisible = true; break; }
+        }
+        if (!botVisible) { s2ctx.restore(); return; }
 
         const bDrawStep = bot.snake.length > 150 ? Math.ceil(bot.snake.length/150) : 1;
         s2ctx.beginPath();
@@ -51,7 +59,7 @@ function s2Draw() {
         bot.snake.forEach((p, i) => {
             if (i !== 0 && i !== bot.snake.length-1 && i % bDrawStep !== 0) return;
             const sx = p.x - s2CameraX, sy = p.y - s2CameraY;
-            if (sx < -30 || sx > s2canvas.width+30 || sy < -30 || sy > s2canvas.height+30) { started = false; return; }
+            if (sx < -S2_MARGIN || sx > s2canvas.width+S2_MARGIN || sy < -S2_MARGIN || sy > s2canvas.height+S2_MARGIN) { started = false; return; }
             if (!started) { s2ctx.moveTo(sx, sy); started = true; } else { s2ctx.lineTo(sx, sy); }
         });
         s2ctx.strokeStyle = '#16181c';
@@ -64,7 +72,7 @@ function s2Draw() {
         // eyes on bot head
         const bHead = bot.snake[0];
         const bx = bHead.x - s2CameraX, by = bHead.y - s2CameraY;
-        if (bx > -30 && bx < s2canvas.width+30 && by > -30 && by < s2canvas.height+30) {
+        if (bx > -S2_MARGIN && bx < s2canvas.width+S2_MARGIN && by > -S2_MARGIN && by < s2canvas.height+S2_MARGIN) {
             const bdx = Math.cos(bot.angle), bdy = Math.sin(bot.angle);
             const bpx = -bdy, bpy = bdx;
             const boff = 4;
@@ -127,6 +135,7 @@ function s2Draw() {
         s2ctx.arc(zx, zy, s2ZoneRadius, 0, Math.PI*2);
         s2ctx.stroke();
     }
+    s2ctx.restore();
     s2DrawMinimap();
 }
 
