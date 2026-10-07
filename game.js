@@ -6,6 +6,18 @@ let lastPulseTime = performance.now();
 let shieldActive = false, shieldFruitActive = false, shieldCooldown = false;
 let shieldGraceUntil = 0, shieldFruitTimer = null, sfx = null, sfy = null;
 let rocks = [], rockFruitCount = 0;
+
+function drawGridLines(c, w, h, step, ox, oy) {
+    c.save();
+    c.strokeStyle = 'rgba(201,148,79,0.06)';
+    c.lineWidth = 1;
+    c.beginPath();
+    for (let x = ((ox % step) + step) % step; x <= w; x += step) { c.moveTo(x + 0.5, 0); c.lineTo(x + 0.5, h); }
+    for (let y = ((oy % step) + step) % step; y <= h; y += step) { c.moveTo(0, y + 0.5); c.lineTo(w, y + 0.5); }
+    c.stroke();
+    c.restore();
+}
+
 function resizeCanvas(){
     gameboard.width = gameboard.clientWidth;
     gameboard.height = gameboard.clientHeight;
@@ -260,6 +272,7 @@ function renderLoop(myGen){
         ctx.translate(Math.floor((gameboard.width - wscreen()) / 2),
                       Math.floor((gameboard.height - hscreen()) / 2));
         clearscreen();
+        drawGridLines(ctx, wscreen(), hscreen(), size, 0, 0);
         ctx.strokeStyle = "rgba(201,148,79,0.35)";
         ctx.lineWidth = 2;
         ctx.strokeRect(0, 0, wscreen(), hscreen());
